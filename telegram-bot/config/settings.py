@@ -18,7 +18,7 @@ class BotSettings:
 
 
 def read_config(file_path):
-    logger.info(f'file_path: {file_path}')
+    logger.info("Path to settings file: %s", file_path)
     with open(file_path, 'r') as file:
         data = json.load(file)
         return BotSettings(**data)

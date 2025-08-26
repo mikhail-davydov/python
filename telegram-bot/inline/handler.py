@@ -21,7 +21,7 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
         InlineQueryResultArticle(
             id=str(uuid4()),
             title="Scream",
-            input_message_content=InputTextMessageContent(f"Scream: {query.upper()}!"),
+            input_message_content=get_input_text_message_content(query),
         ),
         InlineQueryResultArticle(
             id=str(uuid4()),
@@ -40,3 +40,10 @@ async def inline_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     await update.inline_query.answer(results)
+
+
+def get_input_text_message_content(query: str) -> InputTextMessageContent:
+    logger.info("Screaming: %s", query)
+    return InputTextMessageContent(
+        f"Scream: {query.upper()}!",
+    )

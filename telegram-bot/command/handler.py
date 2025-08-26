@@ -7,7 +7,7 @@ logger = get_logger(__name__)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info("call /start")
+    logger.info("Call /start")
     await context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
     if context.args:
         user_says = " ".join(context.args)
@@ -15,7 +15,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help(update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info("call /help")
+    logger.info("Call /help")
     help_message = (
         "Список доступных команд:\n\n"
         "/start [args] - Запуск бота\n"
@@ -26,6 +26,6 @@ async def help(update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def feedback(update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info("call /feedback")
+    logger.info("Call /feedback")
     feedback_message = context.bot_data.get('feedback_email')
     await update.message.reply_text(feedback_message)
