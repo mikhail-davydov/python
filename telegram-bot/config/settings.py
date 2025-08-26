@@ -1,5 +1,10 @@
 import json
 
+from logger import get_logger
+
+logger = get_logger(__name__)
+
+
 class BotSettings:
 
     def __init__(self, name, link, token, feedback_email):
@@ -10,3 +15,10 @@ class BotSettings:
 
     def to_json(self):
         return json.dumps(self.__dict__, indent=2)
+
+
+def read_config(file_path):
+    logger.info(f'file_path: {file_path}')
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+        return BotSettings(**data)
