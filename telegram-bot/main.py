@@ -11,7 +11,7 @@ SETTINGS_FILE_PATH = '.private/bot-settings.json'
 
 def main():
     bot_settings = read_config(SETTINGS_FILE_PATH)
-    logger.info("bot_settings:\n%s", bot_settings.to_json())
+    logger.info("Bot settings:\n%s", bot_settings.to_json())
 
     app = ApplicationBuilder().token(bot_settings.token).build()
 
