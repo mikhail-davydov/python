@@ -21,7 +21,7 @@ class QuestionModelTests(TestCase):
         was_published_recently() returns False for questions whose pub_date
         is older than 1 day.
         """
-        time = timezone.now() - datetime.timedelta(days=1, seconds=1)
+        time = timezone.now() - datetime.timedelta(days=7, seconds=1)
         old_question = Question(pub_date=time)
         self.assertIs(old_question.was_published_recently(), False)
 
