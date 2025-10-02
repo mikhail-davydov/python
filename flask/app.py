@@ -17,7 +17,7 @@ def hello():
 
 @app.get('/login')
 def login_get():
-    return render_template('login.html')
+    return render_template('app/login.html')
 
 
 @app.post('/login')
