@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template
 from markupsafe import escape
 
-app = Flask(__name__)
+app = Flask(__name__, instance_relative_config=True)
 
 
 @app.route('/')
@@ -17,7 +17,7 @@ def hello():
 
 @app.get('/login')
 def login_get():
-    return render_template('app/login.html')
+    return render_template('login.html')
 
 
 @app.post('/login')
