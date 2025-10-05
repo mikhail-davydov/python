@@ -1,13 +1,26 @@
 import functools
+import time
 
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, session, url_for
+    Blueprint, flash, g, redirect, render_template, request, session, url_for, current_app
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from flaskr.db import get_db
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+
+def measure_performance(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        elapsed_time = time.perf_counter() - start_time
+        current_app.logger.info('Execution time: %s seconds', round(elapsed_time, 2))
+        return result
+
+    return wrapper
 
 
 @bp.route('/register', methods=('GET', 'POST'))
@@ -41,7 +54,9 @@ def register():
 
 
 @bp.route('/login', methods=('GET', 'POST'))
+@measure_performance
 def login():
+    # time.sleep(2)  # long operation imitation
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -59,6 +74,7 @@ def login():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
+            current_app.logger.info('User [%s] logged in successfully', session['user_id'])
             return redirect(url_for('index'))
 
         flash(error)
@@ -79,7 +95,10 @@ def load_logged_in_user():
 
 
 @bp.route('/logout')
+@measure_performance
 def logout():
+    # time.sleep(2)  # long operation imitation
+    current_app.logger.info('User [%s] logged out successfully', session['user_id'])
     session.clear()
     return redirect(url_for('index'))
 
