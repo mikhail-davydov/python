@@ -7,3 +7,4 @@ To keep some useful snippets
 - [algorithms](./algorithms/README.md), algorithms implementation
 - [telegram bot](./telegram-bot/README.md), telegram bot playground
 - [django](./django/README.md), django framework sandbox
+- [flask](./flask/README.md), flask framework sandbox
