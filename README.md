@@ -8,3 +8,4 @@ To keep some useful snippets
 - [telegram bot](./telegram-bot/README.md), telegram bot playground
 - [django](./django/README.md), django framework sandbox
 - [flask](./flask/README.md), flask framework sandbox
+- [snake](./snake/README.md), simple classic Snake Game
