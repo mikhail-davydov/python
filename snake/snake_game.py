@@ -27,11 +27,11 @@ snake_speed = 5
 
 font_size = 25
 score_size = 35
-game_over_message_font = pygame.font.SysFont("bahnschrift", font_size)
+message_font = pygame.font.SysFont("bahnschrift", font_size)
 score_font = pygame.font.SysFont("comicsansms", score_size)
 
 def score(score):
-    value = score_font.render("Ваш счёт: " + str(score), True, yellow)
+    value = score_font.render("Ваш счёт: " + str(score), True, white)
     dis.blit(value, [0, 0])
 
 def snake(snake_block, snake_list):
@@ -41,10 +41,10 @@ def snake(snake_block, snake_list):
 def game_over_message():
     message_text = "Вы проиграли!\nНажмите Q для выхода или C для продолжения."
     lines = message_text.split("\n")
-    line_size = game_over_message_font.get_linesize()
+    line_size = message_font.get_linesize()
 
     for idx, line in enumerate(lines):
-        message = game_over_message_font.render(line, True, red)
+        message = message_font.render(line, True, red)
 
         # Получение прямоугольника текста
         text_rect = message.get_rect()
@@ -57,10 +57,10 @@ def game_over_message():
 def win_message():
     message_text = "Вы выиграли!\nНажмите Q для выхода или C для продолжения."
     lines = message_text.split("\n")
-    line_size = game_over_message_font.get_linesize()
+    line_size = message_font.get_linesize()
 
     for idx, line in enumerate(lines):
-        message = game_over_message_font.render(line, True, green)
+        message = message_font.render(line, True, green)
 
         # Получение прямоугольника текста
         text_rect = message.get_rect()
@@ -127,7 +127,7 @@ def game_loop(snake_speed: int):
         x1 += x1_change
         y1 += y1_change
         dis.fill(blue)
-        pygame.draw.rect(dis, green, [food_x, food_y, snake_block, snake_block])
+        pygame.draw.rect(dis, yellow, [food_x, food_y, snake_block, snake_block])
         snake_head = [x1, y1]
         snake_list.append(snake_head)
         if len(snake_list) > length_of_snake:
