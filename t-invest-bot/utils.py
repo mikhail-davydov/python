@@ -1,7 +1,7 @@
 import json
 
 import logger
-from model import Settings, TokenData
+from model import Settings, TokenData, UrlData
 
 log = logger.get(__name__)
 
@@ -11,7 +11,8 @@ def get_config(path: str) -> Settings | None:
         with open(path, 'r') as file:
             data = json.load(file)
             token = TokenData(**data["token"])
-            settings = Settings(token=token, sandbox_mode=data["sandbox_mode"])
+            url = UrlData(**data["url"])
+            settings = Settings(account_id=data["account_id"], token=token, sandbox_mode=data["sandbox_mode"], url=url)
             return settings
     except FileNotFoundError:
         log.error("File [{}] was not found".format(path))
