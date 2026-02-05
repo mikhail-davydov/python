@@ -1,4 +1,4 @@
-# Telegram Bot Playground
+# Telegram Bot Sandbox
 
 Based on Telegram Bot Tutorial
 
