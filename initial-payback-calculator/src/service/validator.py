@@ -23,7 +23,7 @@ def validate_commercial_space_info(initial_data: InitialData) -> List[str]:
         ('workers_count', 'Количество работников'),
         ('worker_change_cost', 'Стоимость смены работника'),
         ('worker_tax_rate', 'Налоговая ставка на заработную плату'),
-        ('equiring_rate', 'Эквайринговая комиссия'),
+        ('acquiring_rate', 'Эквайринговая комиссия'),
         ('tax_rate', 'Налоговая ставка'),
         ('initial_investment', 'Первоначальные вложения'),
         ('sales_rate', 'Комиссия с продаж'),

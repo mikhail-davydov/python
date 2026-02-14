@@ -21,7 +21,7 @@ class InitialData:
     workers_count: int | None = None
     worker_change_cost: float | None = None
     worker_tax_rate: float | None = None
-    equiring_rate: float | None = None
+    acquiring_rate: float | None = None
     tax_rate: float | None = None
     initial_investment: float | None = None
     sales_rate: float | None = None
@@ -64,7 +64,7 @@ class InitialData:
 
     def equiring_rate_decimal(self):
         """Преобразует ставку эквайринга' в дробный вид"""
-        return self.equiring_rate / 100 if self.equiring_rate is not None else 0
+        return self.acquiring_rate / 100 if self.acquiring_rate is not None else 0
 
 
 class RentalIncome(NamedTuple):
