@@ -1,12 +1,156 @@
-# Python Code repository
+# Python Projects Repository
 
-## Description
-To keep some useful snippets
+## Описание
 
-## Content
-- [algorithms](./algorithms/README.md), algorithms implementation
-- [telegram bot](./telegram-bot/README.md), telegram bot sandbox
-- [django](./django/README.md), django framework sandbox
-- [flask](./flask/README.md), flask framework sandbox
-- [snake](./snake/README.md), simple classic Snake Game
-- [initial payback calculator](initial-payback-calculator/README.md), simple initial payback calculator for the handmade goods shop
+Мультипроектный репозиторий, содержащий коллекцию учебных примеров, демонстрационных приложений и алгоритмических реализаций на языке Python. Репозиторий служит площадкой для изучения различных технологий, фреймворков и паттернов программирования.
+
+## Основные возможности
+
+- **Алгоритмы** — реализации классических алгоритмов для изучения Computer Science
+- **Веб-разработка** — примеры на Django и Flask с различными подходами к архитектуре
+- **Телеграм-боты** — песочница для создания ботов с использованием python-telegram-bot
+- **Игры** — классическая игра "Змейка" на Python
+- **Калькуляторы** — инструменты для бизнес-расчётов
+
+## Технологический стек
+
+| Категория | Технологии |
+|-----------|------------|
+| Язык программирования | Python 3.10+ |
+| Веб-фреймворки | Django 5.x, Flask 3.x |
+| Базы данных | SQLite (встроенная) |
+| Телеграм-боты | python-telegram-bot |
+| Тестирование | pytest |
+| Виртуальные окружения | venv |
+
+## Структура проекта
+
+```
+.
+├── algorithms/          # Реализации алгоритмов
+├── django/              # Django-приложение (опросы)
+├── flask/               # Flask-приложения
+│   ├── app/             # Простое веб-приложение
+│   └── flaskr/          # Блог-приложение
+├── initial-payback-calculator/  # Калькулятор окупаемости
+├── snake/               # Игра "Змейка"
+└── telegram-bot/        # Телеграм-бот песочница
+```
+
+### Описание директорий
+
+#### [`algorithms/`](algorithms/README.md)
+Реализации базовых алгоритмов и структур данных:
+- BFS (поиск в ширину)
+- DFS (поиск в глубину)
+- Числа Фибоначчи
+- Задача о рюкзаке
+- Быстрая сортировка (quicksort)
+
+#### [`django/`](django/README.md)
+Полноценное Django-приложение "Опросы" (polls), созданное по официальному руководству Django Tutorial. Включает:
+- Модели вопросов и ответов
+- Админ-панель
+- Представления и URL-маршруты
+- Шаблоны и статические файлы
+- Миграции базы данных
+- Юнит-тесты
+
+#### [`flask/`](flask/README.md)
+Коллекция Flask-приложений различной сложности:
+
+##### [`flask/app/`](flask/app/README.md)
+Простое веб-приложение на основе QuickStart Tutorial. Демонстрирует базовые концепции Flask: маршруты, шаблоны, статические файлы.
+
+##### [`flask/flaskr/`](flask/flaskr/README.md)
+Блог-приложение из официального Flask Tutorial. Включает систему аутентификации пользователей, создание и редактирование постов.
+
+#### [`initial-payback-calculator/`](initial-payback-calculator/README.md)
+Калькулятор начальной окупаемости для магазина handmade-товаров. Предназначен для расчёта сроков возврата инвестиций с учётом себестоимости продукции.
+
+#### [`snake/`](snake/README.md)
+Классическая игра "Змейка" (Snake Game) с использованием библиотеки `pygame`. Реализует базовую механику движения, съедания еды и роста змейки.
+
+#### [`telegram-bot/`](telegram-bot/README.md)
+Песочница для создания Телеграм-ботов с использованием библиотеки python-telegram-bot. Демонстрирует различные типы обработчиков: команды, инлайн-кнопки, текстовые сообщения.
+
+## Установка и запуск
+
+### Требования
+
+- Python 3.10 или выше
+- pip (менеджер пакетов Python)
+
+### Общие рекомендации
+
+Для каждого проекта рекомендуется создавать отдельное виртуальное окружение:
+
+```bash
+# Создание виртуального окружения
+python -m venv .venv
+
+# Активация (Windows)
+.venv\Scripts\activate
+
+# Активация (Linux/macOS)
+source .venv/bin/activate
+
+# Установка зависимостей
+pip install -r requirements.txt
+```
+
+### Запуск проектов
+
+#### Django
+```bash
+cd django
+python manage.py runserver
+```
+
+#### Flask (простое приложение)
+```bash
+cd flask/app
+python app.py
+```
+
+#### Flask (flaskr)
+```bash
+cd flask/flaskr
+flask run
+```
+
+#### Telegram-бот
+```bash
+cd telegram-bot
+python main.py
+```
+
+#### Игра "Змейка"
+```bash
+cd snake
+python snake_game.py
+```
+
+#### Калькулятор окупаемости
+```bash
+cd initial-payback-calculator
+python main.py
+```
+
+## Тестирование
+
+Некоторые проекты включают тесты. Запуск тестов:
+
+```bash
+# Django
+cd django
+python manage.py test
+
+# Flask
+cd flask
+pytest
+```
+
+## Лицензия
+
+MIT License
