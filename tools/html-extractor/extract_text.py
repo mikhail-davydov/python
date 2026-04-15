@@ -12,7 +12,8 @@ def extract_html_text(html_string: str) -> str:
 
 if __name__ == "__main__":
     # Входные данные
-    raw_html = '<span>/api<wbr>/v1<wbr>/assets<wbr>/external<wbr>/vehicle</span>'
+    raw_html = input()
+    # raw_html = '<span>/api<wbr>/v1<wbr>/assets<wbr>/external<wbr>/vehicle</span>'
 
     # Обработка
     result = extract_html_text(raw_html)
