@@ -1,0 +1,103 @@
+import json # импорт модуля для работы с JSON файлами
+'----------------------'
+# ФОРМАТ JSON:
+# JSON (JavaScript Object Notation) — текстовый формат обмена данными
+# Структура ключ-значение, как словарь Python
+# Ключи ТОЛЬКО строки в двойных кавычках
+# Поддерживает неограниченную вложенность
+'----------------------'
+# ТИПЫ ЗНАЧЕНИЙ В JSON:
+# число: 42, 3.14
+# строка: "текст"
+# булевы: true, false
+# null: отсутствие значения
+# массив: [1, "два", true]
+# объект: {"ключ": "значение"}
+'----------------------'
+# ОСНОВНЫЕ ФУНКЦИИ СЕРИАЛИЗАЦИИ:
+json.dumps(obj, indent=None, sort_keys=False, separators=None, ensure_ascii=True, skipkeys=False)
+# преобразует Python объект в JSON строку
+
+json.dump(obj, file, indent=None, sort_keys=False, separators=None, ensure_ascii=True)
+# записывает Python объект в файл в формате JSON
+'----------------------'
+# ОСНОВНЫЕ ФУНКЦИИ ДЕСЕРИАЛИЗАЦИИ:
+json.loads(json_string)
+# преобразует JSON строку в Python объект
+
+json.load(file)
+# читает JSON данные из файлового объекта
+'----------------------'
+# СЕРИАЛИЗАЦИЯ В СТРОКУ:
+data = {'name': 'Russia', 'phone_code': 7}
+json_string = json.dumps(data)
+# '{"name": "Russia", "phone_code": 7}'
+'----------------------'
+# ДЕСЕРИАЛИЗАЦИЯ ИЗ СТРОКИ:
+json_string = '{"name": "Russia", "phone_code": 7}'
+data = json.loads(json_string)
+# {'name': 'Russia', 'phone_code': 7}
+'----------------------'
+# ЗАПИСЬ В ФАЙЛ:
+with open('data.json', 'w', encoding='utf-8') as file:
+    json.dump(data, file)
+'----------------------'
+# ЧТЕНИЕ ИЗ ФАЙЛА:
+with open('data.json', 'r', encoding='utf-8') as file:
+    data = json.load(file)
+'----------------------'
+# ФОРМАТИРОВАНИЕ:
+json.dumps(data, indent=2)               # отступы числом
+json.dumps(data, indent='---')           # отступы строкой
+json.dumps(data, sort_keys=True)         # сортировка ключей
+json.dumps(data, separators=(';', ' = ')) # пользовательские разделители
+'----------------------'
+# КИРИЛЛИЦА:
+# По умолчанию кодируется в Unicode:
+json.dumps({'name': 'Тимур'})
+# '{"name": "\\u0422\\u0438\\u043c\\u0443\\u0440"}'
+
+# Отключение ASCII кодирования:
+json.dumps({'name': 'Тимур'}, ensure_ascii=False)
+# '{"name": "Тимур"}'
+'----------------------'
+# КОНВЕРТАЦИЯ ТИПОВ Python → JSON:
+# dict → object
+# list, tuple → array
+# str → string
+# int, float → number
+# True → true
+# False → false
+# None → null
+'----------------------'
+# КОНВЕРТАЦИЯ ТИПОВ JSON → Python:
+# object → dict
+# array → list
+# string → str
+# number (int) → int
+# number (real) → float
+# true → True
+# false → False
+# null → None
+'----------------------'
+# ОГРАНИЧЕНИЯ КЛЮЧЕЙ:
+# Допустимые ключи: str, int, float, bool, None
+# Недопустимые: tuple, list, dict
+
+# Игнорирование недопустимых ключей:
+json.dumps(data, skipkeys=True)
+'----------------------'
+# ОБРАБОТКА ОШИБОК:
+try:
+    data = json.loads(json_string)
+except json.JSONDecodeError as e:
+    print(f"Ошибка парсинга: {e}")
+    print(f"Позиция: {e.pos}")
+'----------------------'
+# ОСОБЕННОСТИ:
+# ✔️ Всегда указывайте encoding='utf-8' для файлов
+# ✔️ Используйте ensure_ascii=False для кириллицы
+# ✔️ tuple превращается в list при сериализации
+# ✔️ Ключи автоматически становятся строками
+# ❌ Только двойные кавычки в JSON (не одинарные!)
+# ❌ Нельзя использовать tuple как ключи словарей

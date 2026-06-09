@@ -42,3 +42,4 @@ build/
 .private/
 **/__pycache__
 **/.env
+/_ai/

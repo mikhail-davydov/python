@@ -1,0 +1,96 @@
+from zipfile import ZipFile # импорт класса для работы с ZIP архивами
+import zipfile               # для дополнительных функций
+'----------------------'
+# АРХИВИРОВАНИЕ И СЖАТИЕ:
+# Архивация — упаковка файлов в один архив
+# Сжатие — уменьшение размера файлов
+# ZIP — формат сжатия без потерь
+'----------------------'
+# КОЭФФИЦИЕНТ СЖАТИЯ:
+# K = V_сжатый / V_исходный × 100%
+'----------------------'
+# РЕЖИМЫ ОТКРЫТИЯ АРХИВА:
+'r'  # чтение (по умолчанию)
+'w'  # запись (перезапись существующего)
+'a'  # добавление в существующий архив
+'----------------------'
+# СОЗДАНИЕ ОБЪЕКТА ZipFile:
+ZipFile(filename, mode='r', compression=ZIP_STORED, allowZip64=True)
+'----------------------'
+# МЕТОДЫ СЖАТИЯ:
+zipfile.ZIP_STORED   # без сжатия (только упаковка)
+zipfile.ZIP_DEFLATED # стандартное сжатие
+zipfile.ZIP_BZIP2    # сжатие BZIP2
+zipfile.ZIP_LZMA     # сжатие LZMA
+'----------------------'
+# ПРОСМОТР СОДЕРЖИМОГО:
+with ZipFile('archive.zip') as zip_file:
+    zip_file.printdir()          # табличный вывод содержимого
+    names = zip_file.namelist()  # список имен файлов и папок
+    info_list = zip_file.infolist()  # список объектов ZipInfo
+'----------------------'
+# ИНФОРМАЦИЯ О ФАЙЛЕ:
+with ZipFile('archive.zip') as zip_file:
+    info = zip_file.getinfo('file.txt')  # информация о конкретном файле
+    print(info.filename)       # имя файла
+    print(info.file_size)      # исходный размер
+    print(info.compress_size)  # сжатый размер
+    print(info.date_time)      # дата (год, месяц, день, час, мин, сек)
+    print(info.is_dir())       # True для папок, False для файлов
+'----------------------'
+# ЧТЕНИЕ ФАЙЛА ИЗ АРХИВА:
+with ZipFile('archive.zip') as zip_file:
+    with zip_file.open('file.txt') as file:
+        content = file.read()  # возвращает bytes
+        text = content.decode('utf-8')  # bytes → str
+'----------------------'
+# СОЗДАНИЕ АРХИВА:
+with ZipFile('new_archive.zip', mode='w') as zip_file:
+    zip_file.write('file.txt')  # добавить файл
+    zip_file.write('document.pdf', 'docs/document.pdf')  # с новым именем
+'----------------------'
+# ДОБАВЛЕНИЕ В АРХИВ:
+with ZipFile('archive.zip', mode='a') as zip_file:
+    zip_file.write('new_file.txt')
+'----------------------'
+# ИЗВЛЕЧЕНИЕ ИЗ АРХИВА:
+with ZipFile('archive.zip') as zip_file:
+    zip_file.extract('file.txt')  # извлечь один файл
+    zip_file.extract('file.txt', 'output/')  # в указанную папку
+    zip_file.extractall()  # извлечь все файлы
+    zip_file.extractall('output/')  # все файлы в папку
+'----------------------'
+# ПРОВЕРКА ZIP ФАЙЛА:
+zipfile.is_zipfile('file.zip')
+# возвращает True если файл является корректным ZIP архивом
+'----------------------'
+# РАБОТА С ПАРОЛЕМ (только чтение):
+with ZipFile('encrypted.zip') as zip_file:
+    zip_file.setpassword(b'password')  # пароль в байтах
+    with zip_file.open('protected.txt') as file:
+        content = file.read().decode('utf-8')
+'----------------------'
+# ОБРАБОТКА ОШИБОК:
+try:
+    with ZipFile('archive.zip') as zip_file:
+        zip_file.extract('file.txt')
+except FileNotFoundError:    # архив не найден
+    pass
+except zipfile.BadZipFile:   # поврежденный архив
+    pass
+except KeyError:             # файл не найден в архиве
+    pass
+except RuntimeError:         # ошибка пароля
+    pass
+'----------------------'
+# ОСОБЕННОСТИ:
+# open() всегда возвращает bytes, не str
+# Нельзя изменять файлы в архиве напрямую
+# Пути в архиве используют '/' независимо от ОС
+# monthrange(year, month)[0] — день недели 1го числа (0-6)
+# monthrange(year, month)[1] — количество дней в месяце
+'----------------------'
+# АЛЬТЕРНАТИВЫ:
+# tarfile — для TAR архивов (Unix стандарт)
+# gzip, bz2, lzma — для сжатия отдельных файлов
+# shutil.make_archive() — высокоуровневая архивация

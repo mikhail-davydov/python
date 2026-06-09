@@ -1,0 +1,80 @@
+import csv # импорт модуля для работы с CSV файлами
+'----------------------'
+# ФОРМАТЫ CSV:
+# CSV — разделитель запятая (,)
+# TSV — разделитель табуляция (\t)
+# DSV — любой другой разделитель
+'----------------------'
+# РУЧНАЯ РАБОТА (простые случаи):
+with open('file.csv', encoding='utf-8') as file:
+    data = file.read()
+    table = [row.split(',') for row in data.splitlines()]
+    header = table[0]      # заголовки
+    rows = table[1:]       # данные без заголовков
+'----------------------'
+# ЧТЕНИЕ С csv.reader:
+csv.reader(file, delimiter=',', quotechar='"')
+# возвращает итератор списков для каждой строки
+
+with open('products.csv', encoding='utf-8') as file:
+    rows = csv.reader(file)
+    for row in rows:
+        print(row)  # ['keywords', 'price', 'product_name']
+'----------------------'
+# ЧТЕНИЕ С csv.DictReader:
+csv.DictReader(file, delimiter=',', quotechar='"', fieldnames=None)
+# возвращает итератор словарей, ключи = названия столбцов
+
+with open('products.csv', encoding='utf-8') as file:
+    rows = csv.DictReader(file)
+    for row in rows:
+        print(row['price'])  # обращение по названию столбца
+'----------------------'
+# ЗАПИСЬ С csv.writer:
+csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+with open('output.csv', 'w', encoding='utf-8', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(['col1', 'col2'])        # запись одной строки
+    writer.writerows([['a', 'b'], ['c', 'd']]) # запись нескольких строк
+'----------------------'
+# ЗАПИСЬ С csv.DictWriter:
+csv.DictWriter(file, fieldnames, delimiter=',', quotechar='"')
+
+with open('output.csv', 'w', encoding='utf-8', newline='') as file:
+    writer = csv.DictWriter(file, fieldnames=['name', 'age'])
+    writer.writeheader()                     # запись заголовков
+    writer.writerow({'name': 'Иван', 'age': 25})
+    writer.writerows([{'name': 'Петр', 'age': 30}])
+'----------------------'
+# ОСНОВНЫЕ ПАРАМЕТРЫ:
+delimiter=','           # символ-разделитель полей
+quotechar='"'          # символ кавычек для полей со спецсимволами
+quoting=csv.QUOTE_MINIMAL  # правила использования кавычек
+'----------------------'
+# КОНСТАНТЫ ДЛЯ quoting:
+csv.QUOTE_ALL         # все поля в кавычках
+csv.QUOTE_MINIMAL     # только поля со спецсимволами (по умолчанию)
+csv.QUOTE_NONNUMERIC  # все нечисловые поля в кавычках
+csv.QUOTE_NONE        # никогда не использовать кавычки
+'----------------------'
+# РАЗНЫЕ РАЗДЕЛИТЕЛИ:
+csv.reader(file, delimiter=';')    # точка с запятой
+csv.reader(file, delimiter='\t')   # табуляция (TSV)
+csv.reader(file, delimiter='|')    # вертикальная черта
+'----------------------'
+# РАБОТА С КАВЫЧКАМИ В ДАННЫХ:
+# Поля с запятыми заключаются в кавычки:
+# "Садовый стул, стул для дачи",1699,ВЭДДО
+# csv.reader автоматически обрабатывает такие поля
+'----------------------'
+# АТРИБУТЫ DictReader:
+reader.fieldnames      # названия столбцов (заголовки)
+'----------------------'
+# ОСОБЕННОСТИ:
+# ✔️ Всегда указывайте encoding='utf-8' для русского текста
+# ✔️ Используйте newline='' при записи
+# ✔️ DictReader автоматически использует первую строку как заголовки
+# ✔️ Все данные из CSV являются строками (нужно int(row['price']))
+# ❌ Не передавайте строки вместо файлового объекта в csv.reader
+# ❌ Ключи в DictWriter должны совпадать с fieldnames
