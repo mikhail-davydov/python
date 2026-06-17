@@ -1,0 +1,18 @@
+version: 1
+formatters:
+  json_formatter:
+    (): __main__.JSONFormatter
+    keys_fmt:
+      lvl: levelname
+      msg: message
+
+handlers:
+  file_handler:
+    class: logging.FileHandler
+    filename: logs.jsonl
+    encoding: utf-8
+    formatter: json_formatter
+
+root:
+  level: INFO
+  handlers: [ file_handler ]

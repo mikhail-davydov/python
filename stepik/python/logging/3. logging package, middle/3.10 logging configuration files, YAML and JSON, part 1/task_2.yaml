@@ -1,0 +1,18 @@
+version: 1
+formatters:
+  debug_formatter:
+    format: '%(levelname)s - %(message)s'
+
+handlers:
+  debug_handler:
+    level: DEBUG
+    class: logging.FileHandler
+    filename: trace.log
+    encoding: ascii
+    errors: replace
+    formatter: debug_formatter
+
+root:
+  level: DEBUG
+  handlers:
+    - debug_handler

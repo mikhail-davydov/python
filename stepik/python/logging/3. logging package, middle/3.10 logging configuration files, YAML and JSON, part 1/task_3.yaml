@@ -1,0 +1,32 @@
+version: 1
+
+loggers:
+  app: { }
+  app.api:
+    level: INFO
+  app.audit: { }
+  app.database: { }
+  utils:
+    level: WARNING
+
+root:
+  level: DEBUG
+
+# alt
+
+version: 1
+
+loggers:
+  app:
+    level: DEBUG
+  app.api:
+    level: INFO
+  app.audit:
+    level: DEBUG
+  app.database:
+    level: DEBUG
+  utils:
+    level: WARNING
+
+root:
+  level: DEBUG

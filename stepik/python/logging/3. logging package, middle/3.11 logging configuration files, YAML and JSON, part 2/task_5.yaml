@@ -1,0 +1,30 @@
+version: 1
+
+formatters:
+  billing_formatter:
+    format: "%(levelname)s - %(name)s - %(message)s - [%(card_number)s;%(amount)s;%(currency)s]"
+    defaults:
+      card_number: "NULL"
+      amount: "NULL"
+      currency: "NULL"
+
+filters:
+  card_sanitizer:
+    (): __main__.SanitizeCardFilter
+    record_func: ext://__main__.sanitize_card_data
+
+handlers:
+  billing_handler:
+    class: logging.FileHandler
+    filename: transactions.log
+    level: DEBUG
+    formatter: billing_formatter
+    filters:
+      - card_sanitizer
+
+loggers:
+  billing:
+    level: DEBUG
+    propagate: false
+    handlers:
+      - billing_handler

@@ -1,0 +1,22 @@
+version: 1
+
+formatters:
+  default:
+    format: "[%(name)-5s] - [%(levelname)-8s] - %(message)s"
+
+handlers:
+  file:
+    (): __main__.file_rotating_handler_factory
+    filename: logs/app.log
+    dir_backup: logs/backups
+    level: INFO
+    maxBytes: 200
+    backupCount: 2
+    encoding: utf-8
+    namer_func: ext://__main__.zip_namer
+    rotator_func: ext://__main__.zip_rotator
+    formatter: default
+
+root:
+  handlers: [ file ]
+  level: DEBUG

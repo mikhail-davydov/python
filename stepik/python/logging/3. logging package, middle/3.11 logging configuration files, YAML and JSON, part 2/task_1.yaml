@@ -1,0 +1,25 @@
+version: 1
+
+formatters:
+  root_formatter:
+    format: '%(levelname)s - %(message)s'
+
+handlers:
+  stream_handler:
+    class: logging.StreamHandler
+    stream: ext://sys.stdout
+    formatter: root_formatter
+  err_file_handler:
+    level: ERROR
+    class: logging.FileHandler
+    formatter: root_formatter
+    filename: errors.log
+    encoding: ascii
+    errors: replace
+    delay: true
+
+root:
+  level: DEBUG
+  handlers:
+    - stream_handler
+    - err_file_handler

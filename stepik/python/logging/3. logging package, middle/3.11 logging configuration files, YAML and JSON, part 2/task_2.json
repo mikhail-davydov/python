@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "formatters": {
+    "default": {
+      "format": "%(levelname)s - %(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "stream": "ext://sys.stdout",
+      "formatter": "default"
+    },
+    "error_file": {
+      "class": "logging.FileHandler",
+      "level": "ERROR",
+      "filename": "errors.log",
+      "encoding": "ascii",
+      "errors": "replace",
+      "delay": true,
+      "formatter": "default"
+    }
+  },
+  "root": {
+    "level": "DEBUG",
+    "handlers": [
+      "console",
+      "error_file"
+    ]
+  }
+}
