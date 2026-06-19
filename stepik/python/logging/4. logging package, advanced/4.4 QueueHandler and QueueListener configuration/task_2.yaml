@@ -1,0 +1,32 @@
+version: 1
+
+formatters:
+  deb_format:
+    format: "%(levelname)s - %(message)s"
+  err_format:
+    format: "%(levelname)s - %(threadName)s - [%(module)s:%(funcName)s] - %(message)s"
+
+handlers:
+  file_handler:
+    class: logging.FileHandler
+    filename: trace.log
+    encoding: utf-8
+    formatter: deb_format
+  file_err_handler:
+    class: logging.FileHandler
+    filename: errors.log
+    encoding: utf-8
+    formatter: err_format
+    level: ERROR
+  queue_handler:
+    class: logging.handlers.QueueHandler
+    listener: __main__.auto_queue_listener
+    queue:
+      (): queue.Queue
+      maxsize: 5000
+    handlers: [ file_handler, file_err_handler ]
+    respect_handler_level: true
+
+root:
+  handlers: [ queue_handler ]
+  level: DEBUG

@@ -1,0 +1,22 @@
+version: 1
+
+formatters:
+  file_formatter:
+    format: '%(asctime)s [%(levelname)-8s] - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+
+handlers:
+  handler:
+    (): __main__.BufferingFileHandler
+    filename: trace.log
+    encoding: utf-8
+    delay: true
+    capacity: 10
+    flush_level: WARNING
+    formatter: file_formatter
+
+loggers:
+  '':
+    level: DEBUG
+    handlers:
+      - handler
