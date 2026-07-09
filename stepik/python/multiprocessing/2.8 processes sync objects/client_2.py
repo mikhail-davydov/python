@@ -1,0 +1,22 @@
+import multiprocessing
+from multiprocessing.managers import BaseManager
+from server import check_prime
+
+if __name__ == "__main__":
+    manager = BaseManager(address=("localhost", 50_000), authkey=b"123")
+    manager.register("queue_number")
+    manager.register("queue_results")
+    # manager.register("check_prime")
+    manager.connect()
+    print("connect_ok")
+    print(f"client №2 started, process PID = {multiprocessing.current_process().pid}")
+    queue_number = manager.queue_number()
+    queue_results = manager.queue_results()
+    # check_prime = manager.check_prime
+    while not queue_number.empty():
+        number = queue_number.get()
+        is_pr = check_prime(number)
+        msg = f"{number=} {'is' if is_pr else 'is not'} prime"
+        queue_results.put(msg)
+        print(msg)
+    queue_results.put(None)
