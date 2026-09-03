@@ -34,7 +34,7 @@ def calculate_shelves_and_area(commercial_space_info: InitialData) -> Dict[str, 
 def calculate_rental_income(commercial_space_info: InitialData, total_shelves: int) -> RentalIncome:
     """Рассчитывает потенциальный доход от аренды полок + процент с продаж + ожидаемый дополнительный доход."""
     sales_total = commercial_space_info.shelf_sales_mean_value_per_month * total_shelves
-    equiring = sales_total * commercial_space_info.equiring_rate_decimal()
+    equiring = sales_total * commercial_space_info.acquiring_rate_decimal()
     tax_rate = commercial_space_info.tax_rate_decimal()
 
     full_load_revenue = (

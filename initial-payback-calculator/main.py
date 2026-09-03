@@ -31,7 +31,7 @@ def main():
     total_shelves = shelves_data["total_shelves"]
 
     # Подсчет дохода от аренды
-    rental_income = calculate_rental_income(initial_data, total_shelves)
+    rental_income = calculate_rental_income(initial_data, int(total_shelves))
 
     # Подсчет срока окупаемости
     payback_period = calculate_payback_period(initial_data, rental_income, expenses)

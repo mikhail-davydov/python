@@ -1,8 +1,9 @@
 # Константы
 DAYS_IN_MONTH = 30
 WEEKS_IN_MONTH = 4
-TABLE_FORMAT = "fancy_grid"
-# TABLE_FORMAT = "rst"
+# TABLE_FORMAT = "plain"
+# TABLE_FORMAT = "fancy_grid"
+TABLE_FORMAT = "rst"
 # TABLE_FORMAT = "grid"
 
 # Минимальное начальное значение дохода (10%)

@@ -21,7 +21,7 @@ def validate_commercial_space_info(initial_data: InitialData) -> List[str]:
         ('shelf_height', 'Высота полки'),
         ('shelf_cost_per_week', 'Стоимость размещения товара на полке в неделю'),
         ('workers_count', 'Количество работников'),
-        ('worker_change_cost', 'Стоимость смены работника'),
+        ('worker_shift_cost', 'Стоимость смены работника'),
         ('worker_tax_rate', 'Налоговая ставка на заработную плату'),
         ('acquiring_rate', 'Эквайринговая комиссия'),
         ('tax_rate', 'Налоговая ставка'),

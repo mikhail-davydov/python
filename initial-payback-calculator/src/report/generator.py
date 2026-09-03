@@ -11,17 +11,43 @@ def display_report(
         expenses: float,
         rental_income: RentalIncome,
         shelves_data: Dict[str, float],
-        payback_period: tuple
+        payback_period: tuple,
 ):
     """Выводит результаты на экран."""
+    attr_map = {
+        'acquiring_rate': 'Ставка эквайринга',
+        'additional_expected_income_per_month': 'Ожидаемый дополнительный доход',
+        'ceiling_height': 'Высота потолков',
+        'initial_investment': 'Первоначальные вложения',
+        'monthly_rent': 'Стоимость аренды в месяц',
+        'rent_cost': 'Первоначальная сумма по договору аренды',
+        'sales_rate': 'Процент с продаж',
+        'shelf_cost_per_month': 'Стоимость полки в месяц',
+        'shelf_cost_per_week': 'Стоимость полки в неделю',
+        'shelf_depth': 'Глубина полки в м',
+        'shelf_height': 'Высота полки в м',
+        'shelf_max_height': 'Максимальная высота шкафа с полками',
+        'shelf_sales_mean_value_per_month': 'Средняя ожидаемая сумма продаж с полки',
+        'shelf_width': 'Ширина полки в м',
+        'square_meter_cost': 'Стоимость квадратного метра',
+        'tax_rate': 'Налог, %',
+        'total_area': 'Общая площадь',
+        'utilities_cost': 'Стоимость коммунальных услуг в месяц',
+        'wall_length': 'Общая длина стен',
+        'worker_shift_cost': 'Стоимость смены сотрудника',
+        'worker_tax_rate': 'Налог на сотрудника, %',
+        'workers_cost': 'Полная стоимость сотрудника',
+        'workers_count': 'Количество сотрудников',
+    }
 
     # Получаем список всех полей room_info для полного вывода
-    input_data = [(attr, getattr(commercial_space_info, attr)) for attr in dir(commercial_space_info) if
-                  not callable(getattr(commercial_space_info, attr)) and not attr.startswith("__")]
+    input_data = [(attr, attr_map[attr], getattr(commercial_space_info, attr))
+                  for attr in dir(commercial_space_info)
+                  if not callable(getattr(commercial_space_info, attr)) and not attr.startswith("__")]
 
     # Таблица с вводными параметрами
     print("\nВходные данные:")
-    print(tabulate(input_data, headers=["Параметр", "Значение"], tablefmt=TABLE_FORMAT, numalign="right"))
+    print(tabulate(input_data, headers=["Параметр", "Комментарий", "Значение"], tablefmt=TABLE_FORMAT, numalign="right"))
 
     # Таблицы с основными результатами
     print("\nРезультаты расчета:")
@@ -35,7 +61,7 @@ def display_report(
 
     print("\nРасход детали:")
     total_sales = commercial_space_info.shelf_sales_mean_value_per_month * shelves_data["total_shelves"]
-    equiring = total_sales * commercial_space_info.equiring_rate_decimal()
+    equiring = total_sales * commercial_space_info.acquiring_rate_decimal()
     outcome_details_table = [
         ["Аренда:", commercial_space_info.rent_cost],
         ["Коммунальные услуги:", commercial_space_info.utilities_cost],

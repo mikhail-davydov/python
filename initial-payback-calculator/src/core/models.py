@@ -19,7 +19,7 @@ class InitialData:
     shelf_height: float | None = None
     shelf_cost_per_week: float | None = None
     workers_count: int | None = None
-    worker_change_cost: float | None = None
+    worker_shift_cost: float | None = None
     worker_tax_rate: float | None = None
     acquiring_rate: float | None = None
     tax_rate: float | None = None
@@ -46,8 +46,8 @@ class InitialData:
     @property
     def workers_cost(self):
         """Возвращает месячную зарплату сотрудников"""
-        if self.workers_count is not None and self.worker_change_cost is not None:
-            return self.workers_count * self.worker_change_cost * self.worker_tax_rate_decimal() * DAYS_IN_MONTH
+        if self.workers_count is not None and self.worker_shift_cost is not None:
+            return self.workers_count * self.worker_shift_cost * self.worker_tax_rate_decimal() * DAYS_IN_MONTH
         return 0
 
     def tax_rate_decimal(self):
@@ -62,7 +62,7 @@ class InitialData:
         """Преобразует ставку налога на работника в дробный вид"""
         return (1 + self.worker_tax_rate / 100) if self.worker_tax_rate is not None else 1
 
-    def equiring_rate_decimal(self):
+    def acquiring_rate_decimal(self):
         """Преобразует ставку эквайринга' в дробный вид"""
         return self.acquiring_rate / 100 if self.acquiring_rate is not None else 0
 
