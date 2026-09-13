@@ -7,12 +7,9 @@ import sys
 # from dotenv_vault import load_dotenv
 from dotenvx import load_dotenv
 
-from core.models import Request, Invoice
-
-WARN_NOTIFICATION_DAYS = None
-NOTE_FIELDS_COUNT = 3
-SPLIT_BY = ','
-DATE_FORMAT = '%d.%m.%Y'
+from core.constants import NOTE_FIELDS_COUNT, DATE_FORMAT, WARN_NOTIFICATION_DAYS, SPLIT_BY, DOC_TYPE, START_DATE
+from core.models import InvoiceItem
+from core.request import ArchiveRequest, DocInvoiceRequest
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -38,9 +35,9 @@ def filter_invoices(note: str) -> bool:
     return True
 
 
-def map_invoices(invoice: Invoice):
-    name, phone, date = split_notes(invoice.Note)
-    return invoice.Num, name, phone, date
+def map_invoices(invoice: InvoiceItem):
+    name, phone, date = split_notes(invoice.note)
+    return invoice.num, name, phone, date
 
 
 def split_notes(note) -> tuple[str, ...]:
@@ -57,7 +54,7 @@ def format_output(invoice_notes: list[tuple[int, str, str, str]]):
     print()
     for note in sort_notes(invoice_notes):
         num, name, phone, date = note
-        print(f'{'Номер договора':<15s}: {num}')
+        print(f'{'Договор #':<15s}: {num}')
         print(f'{'Имя':<15s}: {name}')
         print(f'{'Контакт':<15s}: {phone}')
         print(f'{'Действует до':<15s}: {date}')
@@ -65,19 +62,14 @@ def format_output(invoice_notes: list[tuple[int, str, str, str]]):
 
 
 def scheduler():
-    # settings_data = load_json('.private/scheduler-settings.json')
-    # settings = Settings(**settings_data)
-    # logging.info(f'{settings}')
-
-    # request = Request(settings.api_key, settings.db, settings.firm)
-
-    request = Request(api_key, db, firm)
-    items = request.get_all_invoices()
-    item_id_list = list(map(lambda item: item.Object, items))
+    archive_req = ArchiveRequest(api_key, db, firm)
+    items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
+    item_id_list = list(map(lambda item: item.object, items))
     logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
 
-    invoices = [request.get_invoice(invoice) for invoice in item_id_list]
-    filtered_invoices = filter(lambda invoice: filter_invoices(invoice.Note), invoices)
+    invoice_req = DocInvoiceRequest(api_key, db, firm)
+    invoices = [invoice_req.get_item(invoice) for invoice in item_id_list]
+    filtered_invoices = filter(lambda invoice: filter_invoices(invoice.note), invoices)
     invoice_notes = list(map(map_invoices, filtered_invoices))
     logging.info(f'{invoice_notes=}')
 
