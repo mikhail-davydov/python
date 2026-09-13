@@ -1,12 +1,12 @@
 from datetime import date
 
-### Common
+# Common
 WARN_NOTIFICATION_DAYS = None
 NOTE_FIELDS_COUNT = 3
 SPLIT_BY = ','
 DATE_FORMAT = '%d.%m.%Y'
 
-### Requests
+# Requests
 START_DATE = date.fromisoformat('2026-01-01')
 DOC_TYPE = 'doc-invoice'
 HEADERS = {

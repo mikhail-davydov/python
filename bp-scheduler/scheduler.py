@@ -18,11 +18,11 @@ logging.basicConfig(
 )
 
 
-def filter_invoices(note: str) -> bool:
+def should_include_invoice(note: str) -> bool:
     if not note:
         return False
 
-    split_note = split_notes(note)
+    split_note = parse_note_fields(note)
     if len(split_note) != NOTE_FIELDS_COUNT:
         return False
 
@@ -35,24 +35,22 @@ def filter_invoices(note: str) -> bool:
     return True
 
 
-def map_invoices(invoice: InvoiceItem):
-    name, phone, date = split_notes(invoice.note)
+def extract_invoice_fields(invoice: InvoiceItem):
+    name, phone, date = parse_note_fields(invoice.note)
     return invoice.num, name, phone, date
 
 
-def split_notes(note) -> tuple[str, ...]:
-    split_note = tuple(map(str.strip, note.split(SPLIT_BY)))
-    return split_note
+def parse_note_fields(note) -> tuple[str, ...]:
+    return tuple(map(str.strip, note.split(SPLIT_BY)))
 
 
-def sort_notes(invoice_notes: list[tuple[int, str, str, str]]):
-    sort_by_date_to_invoice_num = lambda note: (note[-1], note[0])
-    return sorted(invoice_notes, key=sort_by_date_to_invoice_num)
+def sort_invoices(invoice_notes: list[tuple[int, str, str, str]]):
+    return sorted(invoice_notes, key=lambda note: (note[-1], note[0]))
 
 
-def format_output(invoice_notes: list[tuple[int, str, str, str]]):
+def print_invoice_report(invoice_notes: list[tuple[int, str, str, str]]):
     print()
-    for note in sort_notes(invoice_notes):
+    for note in sort_invoices(invoice_notes):
         num, name, phone, date = note
         print(f'{'Договор #':<15s}: {num}')
         print(f'{'Имя':<15s}: {name}')
@@ -61,23 +59,26 @@ def format_output(invoice_notes: list[tuple[int, str, str, str]]):
         print()
 
 
-def scheduler():
+def main():
+    api_key, db, firm = os.getenv('API_KEY'), os.getenv('DB'), os.getenv('FIRM')
+
     archive_req = ArchiveRequest(api_key, db, firm)
     items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
-    item_id_list = list(map(lambda item: item.object, items))
+    item_id_list = [item.object for item in items]
     logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
 
     invoice_req = DocInvoiceRequest(api_key, db, firm)
     invoices = [invoice_req.get_item(invoice) for invoice in item_id_list]
-    filtered_invoices = filter(lambda invoice: filter_invoices(invoice.note), invoices)
-    invoice_notes = list(map(map_invoices, filtered_invoices))
+    invoice_notes = [
+        extract_invoice_fields(invoice)
+        for invoice in invoices
+        if should_include_invoice(invoice.note)
+    ]
     logging.info(f'{invoice_notes=}')
 
-    format_output(invoice_notes)
+    print_invoice_report(invoice_notes)
 
 
 if __name__ == '__main__':
     load_dotenv('.env')
-    api_key, db, firm = os.getenv('API_KEY'), os.getenv('DB'), os.getenv('FIRM')
-    logging.info(f'{api_key=}, {db=}, {firm=}')
-    scheduler()
+    main()
