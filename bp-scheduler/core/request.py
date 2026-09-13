@@ -12,10 +12,11 @@ from core.models import ArchiveItem, InvoiceItem
 
 class Request:
     def __init__(self, api_key: str, db: str, firm: str):
-        self._firm = firm
         self._auth = {
             'Authorization': f'Bearer {api_key}',
         }
+        self._db = db
+        self._firm = firm
 
     @staticmethod
     def make_request(url: str, params: dict | None, headers: dict) -> dict:
@@ -49,7 +50,7 @@ class Request:
 class ArchiveRequest(Request):
     def __init__(self, api_key: str, db: str, firm: str):
         super().__init__(api_key, db, firm)
-        self._archive_url = f'https://5.375.ru/bpo-api/v1/{db}/archive'
+        self._archive_url = f'https://5.375.ru/bpo-api/v1/{self._db}/archive'
 
     def get_full_doc_type_archive(self, doc_type: str, start_date: date, init_page: int = 0) -> list[ArchiveItem]:
         all_items = []
@@ -92,7 +93,7 @@ class DocTypeRequest(Request, ABC):
 class DocInvoiceRequest(DocTypeRequest):
     def __init__(self, api_key: str, db: str, firm: str):
         super().__init__(api_key, db, firm)
-        self._invoice_url = f'https://5.375.ru/bpo-api/v1/{db}/doc-invoice/'
+        self._invoice_url = f'https://5.375.ru/bpo-api/v1/{self._db}/doc-invoice/'
 
     def get_item(self, invoice_id: str) -> InvoiceItem:
         response: dict = self.make_request(
