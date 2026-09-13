@@ -37,6 +37,7 @@ build/
 
 ### GigaIDE ###
 .gigaide/
+.gigacode/
 
 ### Custom Private settings ###
 .private/
