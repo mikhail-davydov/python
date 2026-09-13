@@ -3,6 +3,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any
+from urllib.parse import urljoin
 
 import requests
 
@@ -27,7 +28,7 @@ class Request:
             headers=headers,
         )
 
-        requests_left = int(response.headers.get('X-RateLimit-Remaining'))
+        requests_left = int(response.headers.get('X-RateLimit-Remaining') or '0')
         if requests_left == 0:
             reset_timestamp = int(response.headers.get('X-RateLimit-Reset'))
             current_time = time.time()
@@ -93,11 +94,12 @@ class DocTypeRequest(Request, ABC):
 class DocInvoiceRequest(DocTypeRequest):
     def __init__(self, api_key: str, db: str, firm: str):
         super().__init__(api_key, db, firm)
-        self._invoice_url = f'https://5.375.ru/bpo-api/v1/{self._db}/doc-invoice/'
+        self._base_invoice_url = f'https://5.375.ru/bpo-api/v1/{self._db}/doc-invoice/'
 
     def get_item(self, invoice_id: str) -> InvoiceItem:
+        invoice_url = urljoin(self._base_invoice_url, invoice_id)
         response: dict = self.make_request(
-            self._invoice_url + invoice_id,
+            invoice_url,
             None,
             self._build_headers(),
         )
