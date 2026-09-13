@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import sys
+import time
 
 # from dotenv import load_dotenv
 # from dotenv_vault import load_dotenv
@@ -23,7 +24,7 @@ def should_include_invoice(note: str) -> bool:
         return False
 
     split_note = parse_note_fields(note)
-    if len(split_note) != NOTE_FIELDS_COUNT:
+    if len(split_note) < NOTE_FIELDS_COUNT:
         return False
 
     now = datetime.date.today()
@@ -36,7 +37,7 @@ def should_include_invoice(note: str) -> bool:
 
 
 def extract_invoice_fields(invoice: InvoiceItem):
-    name, phone, date = parse_note_fields(invoice.note)
+    name, phone, date = parse_note_fields(invoice.note)[:3]
     return invoice.num, name, phone, date
 
 
@@ -49,6 +50,8 @@ def sort_invoices(invoice_notes: list[tuple[int, str, str, str]]):
 
 
 def print_invoice_report(invoice_notes: list[tuple[int, str, str, str]]):
+    print()
+    print(f'Дата отчета: {datetime.date.today()}')
     print()
     for note in sort_invoices(invoice_notes):
         num, name, phone, date = note
@@ -81,4 +84,6 @@ def main():
 
 if __name__ == '__main__':
     load_dotenv('.env')
+    start_time = time.perf_counter()
     main()
+    print(f"Done in {time.perf_counter() - start_time:.2f} s")
