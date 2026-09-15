@@ -12,4 +12,4 @@ DOC_TYPE = 'doc-invoice'
 HEADERS = {
     'Accept': 'application/json',
 }
-MIN_WAIT_TIME = 2
+MIN_WAIT_TIME = 5
