@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import time
+from collections import namedtuple
 
 # from dotenv import load_dotenv
 # from dotenv_vault import load_dotenv
@@ -11,6 +12,8 @@ from dotenvx import load_dotenv
 from core.constants import NOTE_FIELDS_COUNT, DATE_FORMAT, WARN_NOTIFICATION_DAYS, SPLIT_BY, DOC_TYPE, START_DATE
 from core.models import InvoiceItem
 from core.request import ArchiveRequest, DocInvoiceRequest
+
+InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to'])
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -37,30 +40,33 @@ def should_include_invoice(note: str) -> bool:
 
 
 def extract_invoice_fields(invoice: InvoiceItem):
-    name, phone, date = parse_note_fields(invoice.note)[:3]
-    return invoice.num, name, phone, date
+    name, phone, date_to = parse_note_fields(invoice.note)[:3]
+    return InvoiceNoteInfo(invoice.num, name, phone, datetime.datetime.strptime(date_to, DATE_FORMAT).date())
 
 
 def parse_note_fields(note) -> tuple[str, ...]:
     return tuple(map(str.strip, note.split(SPLIT_BY)))
 
 
-def sort_invoices(invoice_notes: list[tuple[int, str, str, str]]):
+def sort_invoices(invoice_notes: list[tuple[int, str, str, datetime.date]]):
     return sorted(invoice_notes, key=lambda note: (note[-1], note[0]))
 
 
-def print_invoice_report(invoice_notes: list[tuple[int, str, str, str]]):
+def print_invoice_report(invoice_notes: list[InvoiceNoteInfo]):
     print()
-    print(f'Отчет за {datetime.date.today()}')
+    print(f'Отчет за {datetime.date.today().strftime(DATE_FORMAT)}')
     print()
     print(f'Общее количество: {len(invoice_notes)}')
     print()
     for note in sort_invoices(invoice_notes):
-        num, name, phone, date = note
+        num, name, phone, date_to = note
+        now = datetime.date.today()
+        days_diff = (date_to - now).days
         print(f'{'Договор #':<15s}: {num}')
         print(f'{'Имя':<15s}: {name}')
         print(f'{'Контакт':<15s}: {phone}')
-        print(f'{'Действует до':<15s}: {date}')
+        print(f'{'Действует до':<15s}: {date_to.strftime(DATE_FORMAT)}')
+        print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}')
         print()
 
 
