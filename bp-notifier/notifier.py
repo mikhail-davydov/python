@@ -1,10 +1,10 @@
+from collections import namedtuple
+
 import datetime
 import logging
 import os
 import sys
 import time
-from collections import namedtuple
-
 # from dotenv import load_dotenv
 # from dotenv_vault import load_dotenv
 from dotenvx import load_dotenv
