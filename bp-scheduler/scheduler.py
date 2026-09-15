@@ -51,7 +51,9 @@ def sort_invoices(invoice_notes: list[tuple[int, str, str, str]]):
 
 def print_invoice_report(invoice_notes: list[tuple[int, str, str, str]]):
     print()
-    print(f'Дата отчета: {datetime.date.today()}')
+    print(f'Отчет за {datetime.date.today()}')
+    print()
+    print(f'Общее количество: {len(invoice_notes)}')
     print()
     for note in sort_invoices(invoice_notes):
         num, name, phone, date = note

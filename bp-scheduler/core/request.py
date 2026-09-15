@@ -30,6 +30,7 @@ class Request:
 
         requests_left = int(response.headers.get('X-RateLimit-Remaining') or '0')
         if requests_left == 0:
+            logging.info(f'{response.status_code=}, {response.reason=}, {response.headers=}')
             reset_timestamp = int(response.headers.get('X-RateLimit-Reset'))
             current_time = time.time()
             wait_time = reset_timestamp - current_time
@@ -39,7 +40,6 @@ class Request:
             time.sleep(should_wait)
 
         if response.status_code == 429:
-            logging.info(f'{response.status_code=}, {response.reason=}, {response.headers=}')
             raise RuntimeError('Hit rate limit, should never happen')
 
         return response.json()

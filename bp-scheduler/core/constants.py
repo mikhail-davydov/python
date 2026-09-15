@@ -1,7 +1,7 @@
 from datetime import date
 
 # Common
-WARN_NOTIFICATION_DAYS = None
+WARN_NOTIFICATION_DAYS = 3
 NOTE_FIELDS_COUNT = 3
 SPLIT_BY = ','
 DATE_FORMAT = '%d.%m.%Y'
@@ -12,4 +12,4 @@ DOC_TYPE = 'doc-invoice'
 HEADERS = {
     'Accept': 'application/json',
 }
-MIN_WAIT_TIME = 0.5
+MIN_WAIT_TIME = 2
