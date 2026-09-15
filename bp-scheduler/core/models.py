@@ -32,6 +32,18 @@ class ArchiveItem(BaseItem):
     Модель данных для архивных элементов.
     """
 
+    object: str
+    type: str
+    date: str
+    name: str
+    sum: float
+    firm: str
+    partner: str
+    payment_sum: float
+    packet_group: str
+    packet_group_first: str
+    tag_desc: str
+
     _FIELD_MAP = {
         "Object": "object",
         "Type": "type",
@@ -51,6 +63,24 @@ class InvoiceItem(BaseItem):
     """
     Модель данных для счетов (Invoice).
     """
+
+    object: str
+    type: str
+    firm: str
+    firm_cargo: str
+    partner: str
+    partner_cargo: str
+    date: str
+    name: str
+    num: int
+    curr: str
+    by_curr: float
+    sum_method: str
+    precision: int
+    sum: float
+    mark: str
+    state: int
+    note: str
 
     _FIELD_MAP = {
         "Object": "object",
