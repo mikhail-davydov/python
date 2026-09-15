@@ -1,4 +1,5 @@
 import logging
+import math
 import time
 from abc import ABC, abstractmethod
 from datetime import date
@@ -35,8 +36,8 @@ class Request:
             current_time = time.time()
             wait_time = reset_timestamp - current_time
             logging.info(f'calculated {wait_time=}')
-            should_wait = max(MIN_WAIT_TIME, abs(wait_time))
-            logging.info(f'No requests left, wait {should_wait:.2f}s for reset rate limit')
+            should_wait = max(MIN_WAIT_TIME, math.ceil(abs(wait_time)) + MIN_WAIT_TIME)
+            logging.info(f'No requests left, wait {should_wait}s for reset rate limit')
             time.sleep(should_wait)
 
         if response.status_code == 429:

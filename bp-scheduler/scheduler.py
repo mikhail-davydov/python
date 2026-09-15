@@ -94,4 +94,4 @@ if __name__ == '__main__':
     load_dotenv('.env')
     start_time = time.perf_counter()
     main()
-    print(f"Done in {time.perf_counter() - start_time:.2f} s")
+    print(f"Done in {time.perf_counter() - start_time:.2f}s")
