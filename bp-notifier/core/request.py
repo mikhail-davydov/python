@@ -1,12 +1,11 @@
 import logging
 import math
+import requests
 import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any
 from urllib.parse import urljoin
-
-import requests
 
 from core.constants import HEADERS, MIN_WAIT_TIME
 from core.models import ArchiveItem, InvoiceItem
@@ -29,10 +28,13 @@ class Request:
             headers=headers,
         )
 
+        if response.status_code not in (200, 429):
+            raise RuntimeError(response.status_code, response.reason)
+
         requests_left = int(response.headers.get('X-RateLimit-Remaining') or '0')
         if requests_left == 0:
             logging.info(f'{response.status_code=}, {response.reason=}, {response.headers=}')
-            reset_timestamp = int(response.headers.get('X-RateLimit-Reset'))
+            reset_timestamp = int(response.headers.get('X-RateLimit-Reset') or '0')
             current_time = time.time()
             wait_time = reset_timestamp - current_time
             logging.info(f'calculated {wait_time=}')
@@ -41,7 +43,7 @@ class Request:
             time.sleep(should_wait)
 
         if response.status_code == 429:
-            raise RuntimeError('Hit rate limit, should never happen')
+            raise RuntimeError(response.status_code, response.reason, 'Hit rate limit, should never happen')
 
         return response.json()
 
@@ -72,7 +74,7 @@ class ArchiveRequest(Request):
             _, items = self._get_response_items(params)
             logging.info(f'Get {len(items)} items from {total_count}, page {params.get("page", init_page) + 1}')
 
-        return [ArchiveItem(**item) for item in all_items]
+        return [ArchiveItem.model_validate(item) for item in all_items]
 
     def _get_response_items(self, params: dict) -> tuple[Any, list[Any]]:
         response: dict = self.make_request(
@@ -106,4 +108,4 @@ class DocInvoiceRequest(DocTypeRequest):
         )
 
         logging.info(f'invoice {response=}')
-        return InvoiceItem(**response)
+        return InvoiceItem.model_validate(response)

@@ -2,15 +2,11 @@ from collections import namedtuple
 
 import datetime
 import logging
-import os
 import sys
 import time
-# from dotenv import load_dotenv
-# from dotenv_vault import load_dotenv
-from dotenvx import load_dotenv
 
 from core.constants import NOTE_FIELDS_COUNT, DATE_FORMAT, WARN_NOTIFICATION_DAYS, SPLIT_BY, DOC_TYPE, START_DATE
-from core.models import InvoiceItem
+from core.models import InvoiceItem, AppConfig
 from core.request import ArchiveRequest, DocInvoiceRequest
 
 InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to'])
@@ -70,8 +66,8 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo]):
         print()
 
 
-def main():
-    api_key, db, firm = os.getenv('API_KEY'), os.getenv('DB'), os.getenv('FIRM')
+def main(config: AppConfig):
+    api_key, db, firm = config.model_dump().values()
 
     archive_req = ArchiveRequest(api_key, db, firm)
     items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
@@ -91,7 +87,9 @@ def main():
 
 
 if __name__ == '__main__':
-    load_dotenv('.env')
+    app_config = AppConfig()
+    print(app_config)
+
     start_time = time.perf_counter()
-    main()
+    main(app_config)
     print(f"Done in {time.perf_counter() - start_time:.2f}s")
