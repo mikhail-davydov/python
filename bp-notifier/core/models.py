@@ -1,103 +1,59 @@
-from typing import Any, Dict
+import datetime
+
+from pydantic import BaseModel, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class BaseItem:
-    """
-    Базовый класс для моделей данных с конвертацией полей.
-    Автоматически преобразует поля из PascalCase (API) в snake_case (Python).
-    """
+class AppConfig(BaseSettings):
+    api_key: str | None = Field(min_length=64, default=None)
+    db: str | None = Field(min_length=32, default=None)
+    firm: str | None = Field(min_length=12, default=None)
 
-    _FIELD_MAP: Dict[str, str] = {}
-
-    def __init__(self, **kwargs):
-        for api_key, python_key in self._FIELD_MAP.items():
-            setattr(self, python_key, kwargs.get(api_key))
-
-    def __repr__(self) -> str:
-        attrs = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
-        return f"{self.__class__.__name__}({attrs})"
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, BaseItem):
-            return NotImplemented
-        return self.__dict__ == other.__dict__
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Преобразует объект обратно в словарь."""
-        return self.__dict__.copy()
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="forbid",
+    )
 
 
-class ArchiveItem(BaseItem):
+class ArchiveItem(BaseModel):
     """
     Модель данных для архивных элементов.
     """
 
-    object: str
-    type: str
-    date: str
-    name: str
-    sum: float
-    firm: str
-    partner: str
-    payment_sum: float
-    packet_group: str
-    packet_group_first: str
-    tag_desc: str
-
-    _FIELD_MAP = {
-        "Object": "object",
-        "Type": "type",
-        "Date": "date",
-        "Name": "name",
-        "Sum": "sum",
-        "Firm": "firm",
-        "Partner": "partner",
-        "PaymentSum": "payment_sum",
-        "PacketGroup": "packet_group",
-        "PacketGroupFirst": "packet_group_first",
-        "TagDesc": "tag_desc",
-    }
+    object: str = Field(alias="Object")
+    type: str = Field(alias="Type")
+    date: datetime.date = Field(alias="Date")
+    name: str = Field(alias="Name")
+    sum: float = Field(alias="Sum")
+    firm: str = Field(alias="Firm")
+    partner: str = Field(alias="Partner")
+    payment_sum: float = Field(alias="PaymentSum")
+    packet_group: str | None = Field(alias="PacketGroup", default=None)
+    packet_group_first: bool = Field(alias="PacketGroupFirst", default=False)
+    tag_desc: str | None = Field(alias="TagDesc", default=None)
 
 
-class InvoiceItem(BaseItem):
+class InvoiceItem(BaseModel):
     """
     Модель данных для счетов (Invoice).
     """
 
-    object: str
-    type: str
-    firm: str
-    firm_cargo: str
-    partner: str
-    partner_cargo: str
-    date: str
-    name: str
-    num: int
-    curr: str
-    by_curr: float
-    sum_method: str
-    precision: int
-    sum: float
-    mark: str
-    state: int
-    note: str
-
-    _FIELD_MAP = {
-        "Object": "object",
-        "Type": "type",
-        "Firm": "firm",
-        "FirmCargo": "firm_cargo",
-        "Partner": "partner",
-        "PartnerCargo": "partner_cargo",
-        "Date": "date",
-        "Name": "name",
-        "Num": "num",
-        "Curr": "curr",
-        "ByCurr": "by_curr",
-        "SumMethod": "sum_method",
-        "Precision": "precision",
-        "Sum": "sum",
-        "Mark": "mark",
-        "State": "state",
-        "Note": "note",
-    }
+    object: str = Field(alias="Object")
+    type: str = Field(alias="Type")
+    firm: str = Field(alias="Firm")
+    firm_cargo: str = Field(alias="FirmCargo")
+    partner: str = Field(alias="Partner")
+    partner_cargo: str = Field(alias="Object")
+    date: datetime.date = Field(alias="Date")
+    name: str = Field(alias="Name")
+    num: int = Field(alias="Num")
+    curr: str = Field(alias="Curr")
+    by_curr: float = Field(alias="ByCurr")
+    sum_method: str = Field(alias="SumMethod")
+    precision: int = Field(alias="Precision")
+    sum: float = Field(alias="Sum")
+    mark: bool = Field(alias="Mark")
+    state: str = Field(alias="State")
+    note: str | None = Field(alias="Note", default=None)
