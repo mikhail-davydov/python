@@ -1,14 +1,17 @@
 import logging
 import math
 import requests
+import threading
 import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import Any
 from urllib.parse import urljoin
 
-from core.constants import HEADERS, MIN_WAIT_TIME
+from core.constants import HEADERS
 from core.models import ArchiveItem, InvoiceItem
+
+wait = threading.local()
 
 
 class Request:
@@ -22,28 +25,32 @@ class Request:
     @staticmethod
     def make_request(url: str, params: dict | None, headers: dict) -> dict:
         logging.info(f'{url=}, {params=}')
+
+        wait.seconds = 0
+
         response = requests.get(
             url=url,
             params=params,
             headers=headers,
         )
+        while response.status_code != 200:
+            if response.status_code != 429:
+                raise RuntimeError(response.status_code, response.reason)
 
-        if response.status_code not in (200, 429):
-            raise RuntimeError(response.status_code, response.reason)
-
-        requests_left = int(response.headers.get('X-RateLimit-Remaining') or '0')
-        if requests_left == 0:
-            logging.info(f'{response.status_code=}, {response.reason=}, {response.headers=}')
             reset_timestamp = int(response.headers.get('X-RateLimit-Reset') or '0')
             current_time = time.time()
             wait_time = reset_timestamp - current_time
             logging.info(f'calculated {wait_time=}')
-            should_wait = max(MIN_WAIT_TIME, math.ceil(abs(wait_time)) + MIN_WAIT_TIME)
-            logging.info(f'No requests left, wait {should_wait}s for reset rate limit')
+            should_wait = wait.seconds + math.ceil(abs(wait_time))
+            logging.info(f'No requests left, wait {should_wait}s for reset rate limit, {wait.seconds=}')
             time.sleep(should_wait)
+            wait.seconds += 1
 
-        if response.status_code == 429:
-            raise RuntimeError(response.status_code, response.reason, 'Hit rate limit, should never happen')
+            response = requests.get(
+                url=url,
+                params=params,
+                headers=headers,
+            )
 
         return response.json()
 
@@ -66,15 +73,18 @@ class ArchiveRequest(Request):
             'date_start': start_date,
         }
 
-        total_count, items = self._get_response_items(params)
-        logging.info(f'Get {len(items)} items from {total_count}, page {params.get("page", init_page) + 1}')
+        items = self._get_archive_page(init_page, params)
         while items:
             all_items.extend(items)
             params['page'] = params.get('page', init_page) + 1
-            _, items = self._get_response_items(params)
-            logging.info(f'Get {len(items)} items from {total_count}, page {params.get("page", init_page) + 1}')
+            items = self._get_archive_page(init_page, params)
 
         return [ArchiveItem.model_validate(item) for item in all_items]
+
+    def _get_archive_page(self, init_page, params):
+        total_count, items = self._get_response_items(params)
+        logging.info(f'Get {len(items)} items from {total_count}, page {params.get("page", init_page) + 1}')
+        return items
 
     def _get_response_items(self, params: dict) -> tuple[Any, list[Any]]:
         response: dict = self.make_request(

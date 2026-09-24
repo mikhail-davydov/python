@@ -12,4 +12,7 @@ DOC_TYPE = 'doc-invoice'
 HEADERS = {
     'Accept': 'application/json',
 }
-MIN_WAIT_TIME = 2
+
+# Threads
+MAX_WORKERS = None
+TIMEOUT = 30
