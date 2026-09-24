@@ -39,8 +39,19 @@ build/
 .gigaide/
 .gigacode/
 
+### Python ###
+__pycache__/
+*.pyc
+*.pyo
+dist/
+*.egg-info/
+
 ### Custom Private settings ###
 .private/
-**/__pycache__
-**/.env
-/_ai/
+_ai/
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12

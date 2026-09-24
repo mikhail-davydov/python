@@ -1,12 +1,15 @@
 from collections import namedtuple
+from concurrent.futures import Future, ThreadPoolExecutor
 
 import datetime
 import logging
 import sys
 import time
 
-from core.constants import NOTE_FIELDS_COUNT, DATE_FORMAT, WARN_NOTIFICATION_DAYS, SPLIT_BY, DOC_TYPE, START_DATE
-from core.models import InvoiceItem, AppConfig
+from core.constants import (
+    DATE_FORMAT, DOC_TYPE, MAX_WORKERS, NOTE_FIELDS_COUNT, SPLIT_BY, START_DATE, TIMEOUT, WARN_NOTIFICATION_DAYS
+)
+from core.models import AppConfig, InvoiceItem
 from core.request import ArchiveRequest, DocInvoiceRequest
 
 InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to'])
@@ -67,23 +70,30 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo]):
 
 
 def main(config: AppConfig):
-    api_key, db, firm = config.model_dump().values()
+    try:
+        api_key, db, firm = config.model_dump().values()
 
-    archive_req = ArchiveRequest(api_key, db, firm)
-    items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
-    item_id_list = [item.object for item in items]
-    logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
+        archive_req = ArchiveRequest(api_key, db, firm)
+        items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
+        item_id_list = [item.object for item in items]
+        logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
 
-    invoice_req = DocInvoiceRequest(api_key, db, firm)
-    invoices = [invoice_req.get_item(invoice) for invoice in item_id_list]
-    invoice_notes = [
-        extract_invoice_fields(invoice)
-        for invoice in invoices
-        if should_include_invoice(invoice.note)
-    ]
-    logging.info(f'{invoice_notes=}')
+        invoice_req = DocInvoiceRequest(api_key, db, firm)
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in item_id_list]
 
-    print_invoice_report(invoice_notes)
+        invoices = [task.result(TIMEOUT) for task in tasks]
+
+        invoice_notes = [
+            extract_invoice_fields(invoice)
+            for invoice in invoices
+            if should_include_invoice(invoice.note)
+        ]
+        logging.info(f'{invoice_notes=}')
+
+        print_invoice_report(invoice_notes)
+    except Exception as ex:
+        logging.error(f'Exception: {ex}')
 
 
 if __name__ == '__main__':
