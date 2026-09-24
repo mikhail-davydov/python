@@ -81,8 +81,7 @@ def main(config: AppConfig):
         invoice_req = DocInvoiceRequest(api_key, db, firm)
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in item_id_list]
-
-        invoices = [task.result(TIMEOUT) for task in tasks]
+            invoices = [task.result(TIMEOUT) for task in tasks]
 
         invoice_notes = [
             extract_invoice_fields(invoice)
