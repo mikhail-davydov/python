@@ -78,8 +78,9 @@ def main(config: AppConfig):
         item_id_list = [item.object for item in items]
         logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
 
+        max_workers = MAX_WORKERS or len(item_id_list)
         invoice_req = DocInvoiceRequest(api_key, db, firm)
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
             tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in item_id_list]
             invoices = [task.result(TIMEOUT) for task in tasks]
 

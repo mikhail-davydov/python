@@ -14,5 +14,5 @@ HEADERS = {
 }
 
 # Threads
-MAX_WORKERS = None
+MAX_WORKERS = 5
 TIMEOUT = 30
