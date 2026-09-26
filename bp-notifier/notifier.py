@@ -23,7 +23,7 @@ def should_include_invoice(date_to: date) -> bool:
     days_diff = (date_to - now).days
 
     # Если WARN_NOTIFICATION_DAYS = 0 или None, пропускаем проверку (показываем всё)
-    if WARN_NOTIFICATION_DAYS:
+    if WARN_NOTIFICATION_DAYS is not None and WARN_NOTIFICATION_DAYS > 0:
         return days_diff <= WARN_NOTIFICATION_DAYS
 
     return True
@@ -48,16 +48,12 @@ def extract_invoice_fields(invoice: InvoiceItem) -> InvoiceNoteInfo:
         return InvoiceNoteInfo(invoice.num, None, None, None, error=ex)
 
 
-by_date_and_num = lambda note: (note.date_to, note.num)
-by_num = lambda note: note.num
-
-
 def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_notes: list[InvoiceNoteInfo]):
     now = date.today()
     print()
     print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
     print(f'Общее количество: {len(invoice_notes)}\n')
-    for note in sorted(invoice_notes, key=by_date_and_num):
+    for note in sorted(invoice_notes, key=lambda invoice_note: (invoice_note.date_to, invoice_note.num)):
         num, name, phone, date_to, _ = note
         days_diff = (date_to - now).days
         print(f'{'Договор #':<15s}: {num}')
@@ -67,7 +63,7 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_n
         print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}\n')
 
     print(f'Ошибок: {len(invalid_invoice_notes)}\n')
-    for note in sorted(invalid_invoice_notes, key=by_num):
+    for note in sorted(invalid_invoice_notes, key=lambda invoice_note: invoice_note.num):
         num, *_, error = note
         print(f'Договор # {num}: {error}')
 
@@ -80,24 +76,24 @@ def main(config: AppConfig):
 
         archive_req = ArchiveRequest(api_key, db, firm)
         items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
-        item_id_list = [item.object for item in items]
-        logging.info(f'total: {len(item_id_list)}, items={item_id_list}')
+        invoice_ids = [item.object for item in items]
+        logging.info(f'total: {len(invoice_ids)}, items={invoice_ids}')
 
-        max_workers = MAX_WORKERS or len(item_id_list)
+        max_workers = MAX_WORKERS or len(invoice_ids)
         invoice_req = DocInvoiceRequest(api_key, db, firm)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in item_id_list]
+            tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in invoice_ids]
             invoices = [task.result(TIMEOUT) for task in tasks]
 
         all_invoice_notes = list(map(extract_invoice_fields, invoices))
 
         valid_invoice_notes: list[InvoiceNoteInfo] = []
         invalid_invoice_notes: list[InvoiceNoteInfo] = []
-        [
-            valid_invoice_notes.append(invoice) if not invoice.error
-            else invalid_invoice_notes.append(invoice)
-            for invoice in all_invoice_notes
-        ]
+        for invoice in all_invoice_notes:
+            if invoice.error:
+                invalid_invoice_notes.append(invoice)
+            else:
+                valid_invoice_notes.append(invoice)
 
         invoice_notes = [
             invoice_note
