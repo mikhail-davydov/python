@@ -48,12 +48,8 @@ def extract_invoice_fields(invoice: InvoiceItem) -> InvoiceNoteInfo:
         return InvoiceNoteInfo(invoice.num, None, None, None, error=ex)
 
 
-def sort_invoices_by_date_to_num(invoice_notes: list[InvoiceNoteInfo]):
-    return sorted(invoice_notes, key=lambda note: (note.date_to, note.num))
-
-
-def sort_invoices_by_num(invoice_notes: list[InvoiceNoteInfo]):
-    return sorted(invoice_notes, key=lambda note: note.num)
+by_date_and_num = lambda note: (note.date_to, note.num)
+by_num = lambda note: note.num
 
 
 def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_notes: list[InvoiceNoteInfo]):
@@ -61,7 +57,7 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_n
     print()
     print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
     print(f'Общее количество: {len(invoice_notes)}\n')
-    for note in sort_invoices_by_date_to_num(invoice_notes):
+    for note in sorted(invoice_notes, key=by_date_and_num):
         num, name, phone, date_to, _ = note
         days_diff = (date_to - now).days
         print(f'{'Договор #':<15s}: {num}')
@@ -71,7 +67,7 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_n
         print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}\n')
 
     print(f'Ошибок: {len(invalid_invoice_notes)}\n')
-    for note in sort_invoices_by_num(invalid_invoice_notes):
+    for note in sorted(invalid_invoice_notes, key=by_num):
         num, *_, error = note
         print(f'Договор # {num}: {error}')
 
