@@ -1,4 +1,3 @@
-from collections import namedtuple
 from concurrent.futures import Future, ThreadPoolExecutor
 
 import logging
@@ -9,10 +8,8 @@ from datetime import date, datetime
 from core.constants import (
     DATE_FORMAT, DOC_TYPE, MAX_WORKERS, NOTE_FIELDS_COUNT, SPLIT_BY, START_DATE, TIMEOUT, WARN_NOTIFICATION_DAYS
 )
-from core.models import AppConfig, InvoiceItem
+from core.models import AppConfig, InvoiceItem, InvoiceNoteInfo
 from core.request import ArchiveRequest, DocInvoiceRequest
-
-InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to'])
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -21,17 +18,9 @@ logging.basicConfig(
 )
 
 
-def should_include_invoice(note: str) -> bool:
-    if not note:
-        return False
-
-    split_note = parse_note_fields(note)
-    if len(split_note) < NOTE_FIELDS_COUNT:
-        return False
-
+def should_include_invoice(date_to: date) -> bool:
     now = date.today()
-    note_date = datetime.strptime(split_note[-1], DATE_FORMAT).date()
-    days_diff = (note_date - now).days
+    days_diff = (date_to - now).days
 
     # Если WARN_NOTIFICATION_DAYS = 0 или None, пропускаем проверку (показываем всё)
     if WARN_NOTIFICATION_DAYS:
@@ -40,40 +29,51 @@ def should_include_invoice(note: str) -> bool:
     return True
 
 
-def extract_invoice_fields(invoice: InvoiceItem):
-    parts = parse_note_fields(invoice.note)
-    if len(parts) < 3:
-        logging.warning(f"Некорректный формат note для {invoice.num}: {invoice.note}")
-        return None  # Возвращаем None, чтобы отфильтровать дальше
+def extract_invoice_fields(invoice: InvoiceItem) -> InvoiceNoteInfo:
+    try:
+        note = invoice.note
+        if not note:
+            logging.warning(f'Отсутствует note для {invoice.num}')
+            return InvoiceNoteInfo(invoice.num, None, None, None, error='Отсутствует note')
 
-    name, phone, date_to = parts[:3]
-    return InvoiceNoteInfo(invoice.num, name, phone, datetime.strptime(date_to, DATE_FORMAT).date())
+        parts = tuple(map(str.strip, invoice.note.split(SPLIT_BY)))
+        if len(parts) < NOTE_FIELDS_COUNT:
+            logging.warning(f'Некорректный формат note для договора #{invoice.num}: {invoice.note}')
+            return InvoiceNoteInfo(invoice.num, None, None, None, error=f'Некорректный формат {invoice.note=}')
+
+        name, phone, date_to = parts[:NOTE_FIELDS_COUNT]
+        return InvoiceNoteInfo(invoice.num, name, phone, datetime.strptime(date_to, DATE_FORMAT).date(), error=None)
+    except Exception as ex:
+        logging.error(f'Ошибка при извлечении данных из invoice.note: {ex}', exc_info=True)
+        return InvoiceNoteInfo(invoice.num, None, None, None, error=ex)
 
 
-def parse_note_fields(note: str) -> tuple[str, ...]:
-    return tuple(map(str.strip, note.split(SPLIT_BY)))
+def sort_invoices_by_date_to_num(invoice_notes: list[InvoiceNoteInfo]):
+    return sorted(invoice_notes, key=lambda note: (note.date_to, note.num))
 
 
-def sort_invoices(invoice_notes: list[tuple[int, str, str, date]]):
-    return sorted(invoice_notes, key=lambda note: (note[-1], note[0]))
+def sort_invoices_by_num(invoice_notes: list[InvoiceNoteInfo]):
+    return sorted(invoice_notes, key=lambda note: note.num)
 
 
-def print_invoice_report(invoice_notes: list[InvoiceNoteInfo]):
+def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_notes: list[InvoiceNoteInfo]):
     now = date.today()
     print()
-    print(f'Отчет за {now.strftime(DATE_FORMAT)}')
-    print()
-    print(f'Общее количество: {len(invoice_notes)}')
-    print()
-    for note in sort_invoices(invoice_notes):
-        num, name, phone, date_to = note
+    print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
+    print(f'Общее количество: {len(invoice_notes)}\n')
+    for note in sort_invoices_by_date_to_num(invoice_notes):
+        num, name, phone, date_to, _ = note
         days_diff = (date_to - now).days
         print(f'{'Договор #':<15s}: {num}')
         print(f'{'Имя':<15s}: {name}')
         print(f'{'Контакт':<15s}: {phone}')
         print(f'{'Действует до':<15s}: {date_to.strftime(DATE_FORMAT)}')
-        print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}')
-        print()
+        print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}\n')
+
+    print(f'Ошибок: {len(invalid_invoice_notes)}\n')
+    for note in sort_invoices_by_num(invalid_invoice_notes):
+        num, *_, error = note
+        print(f'Договор # {num}: {error}')
 
 
 def main(config: AppConfig):
@@ -93,17 +93,24 @@ def main(config: AppConfig):
             tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in item_id_list]
             invoices = [task.result(TIMEOUT) for task in tasks]
 
+        all_invoice_notes = list(map(extract_invoice_fields, invoices))
+
+        valid_invoice_notes: list[InvoiceNoteInfo] = []
+        invalid_invoice_notes: list[InvoiceNoteInfo] = []
+        [
+            valid_invoice_notes.append(invoice) if not invoice.error
+            else invalid_invoice_notes.append(invoice)
+            for invoice in all_invoice_notes
+        ]
+
         invoice_notes = [
-            note for note in (
-                extract_invoice_fields(invoice)
-                for invoice in invoices
-                if should_include_invoice(invoice.note)
-            )
-            if note is not None
+            invoice_note
+            for invoice_note in valid_invoice_notes
+            if should_include_invoice(invoice_note.date_to)
         ]
         logging.info(f'{invoice_notes=}')
 
-        print_invoice_report(invoice_notes)
+        print_invoice_report(invoice_notes, invalid_invoice_notes)
     except Exception as ex:
         logging.error(f'Exception: {ex}', exc_info=True)
         raise
@@ -115,4 +122,5 @@ if __name__ == '__main__':
 
     start_time = time.perf_counter()
     main(app_config)
+    print()
     print(f"Done in {time.perf_counter() - start_time:.2f}s")

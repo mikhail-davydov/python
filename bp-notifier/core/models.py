@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 import datetime
 
 from pydantic import BaseModel, Field
@@ -57,3 +59,6 @@ class InvoiceItem(BaseModel):
     mark: bool = Field(alias="Mark")
     state: str = Field(alias="State")
     note: str | None = Field(alias="Note", default=None)
+
+
+InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to', 'error'])
