@@ -33,13 +33,13 @@ def extract_invoice_fields(invoice: InvoiceItem) -> InvoiceNoteInfo:
     try:
         note = invoice.note
         if not note:
-            logging.warning(f'Отсутствует note для {invoice.num}')
-            return InvoiceNoteInfo(invoice.num, None, None, None, error='Отсутствует note')
+            logging.warning(f'#{invoice.num}: отсутствует note')
+            return InvoiceNoteInfo(invoice.num, None, None, None, error='Отсутствует Примечание')
 
         parts = tuple(map(str.strip, invoice.note.split(SPLIT_BY)))
         if len(parts) < NOTE_FIELDS_COUNT:
-            logging.warning(f'Некорректный формат note для договора #{invoice.num}: {invoice.note}')
-            return InvoiceNoteInfo(invoice.num, None, None, None, error=f'Некорректный формат {invoice.note=}')
+            logging.warning(f'#{invoice.num}: некорректный формат, {invoice.note!r}')
+            return InvoiceNoteInfo(invoice.num, None, None, None, error=f'Некорректный формат, {invoice.note!r}')
 
         name, phone, date_to = parts[:NOTE_FIELDS_COUNT]
         return InvoiceNoteInfo(invoice.num, name, phone, datetime.strptime(date_to, DATE_FORMAT).date(), error=None)
@@ -48,11 +48,20 @@ def extract_invoice_fields(invoice: InvoiceItem) -> InvoiceNoteInfo:
         return InvoiceNoteInfo(invoice.num, None, None, None, error=ex)
 
 
-def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_notes: list[InvoiceNoteInfo]):
+def print_invoice_report(
+        invoices_total: int,
+        invoice_notes: list[InvoiceNoteInfo],
+        invalid_invoice_notes: list[InvoiceNoteInfo],
+):
     now = date.today()
+    invalid_total = len(invalid_invoice_notes)
+    pending_total = len(invoice_notes)
+
     print()
     print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
-    print(f'Общее количество: {len(invoice_notes)}\n')
+    print(f'Общее количество активных договоров: {invoices_total}')
+    print(f'Ошибок заполнения: {invalid_total}')
+    print(f'Для обработки: {pending_total}\n')
     for note in sorted(invoice_notes, key=lambda invoice_note: (invoice_note.date_to, invoice_note.num)):
         num, name, phone, date_to, _ = note
         days_diff = (date_to - now).days
@@ -62,10 +71,11 @@ def print_invoice_report(invoice_notes: list[InvoiceNoteInfo], invalid_invoice_n
         print(f'{'Действует до':<15s}: {date_to.strftime(DATE_FORMAT)}')
         print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}\n')
 
-    print(f'Ошибок: {len(invalid_invoice_notes)}\n')
-    for note in sorted(invalid_invoice_notes, key=lambda invoice_note: invoice_note.num):
-        num, *_, error = note
-        print(f'Договор # {num}: {error}')
+    if invalid_total:
+        print('Ошибки заполнения:')
+        for note in sorted(invalid_invoice_notes, key=lambda invoice_note: invoice_note.num):
+            num, *_, error = note
+            print(f'Договор # {num}: {error}')
 
 
 def main(config: AppConfig):
@@ -77,7 +87,8 @@ def main(config: AppConfig):
         archive_req = ArchiveRequest(api_key, db, firm)
         items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
         invoice_ids = [item.object for item in items]
-        logging.info(f'total: {len(invoice_ids)}, items={invoice_ids}')
+        invoices_total = len(invoice_ids)
+        logging.info(f'total: {invoices_total}, items={invoice_ids}')
 
         max_workers = MAX_WORKERS or len(invoice_ids)
         invoice_req = DocInvoiceRequest(api_key, db, firm)
@@ -102,7 +113,7 @@ def main(config: AppConfig):
         ]
         logging.info(f'{invoice_notes=}')
 
-        print_invoice_report(invoice_notes, invalid_invoice_notes)
+        print_invoice_report(invoices_total, invoice_notes, invalid_invoice_notes)
     except Exception as ex:
         logging.error(f'Exception: {ex}', exc_info=True)
         raise
