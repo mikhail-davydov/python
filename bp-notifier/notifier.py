@@ -62,9 +62,9 @@ def print_invoice_report(report: Report):
 
     print()
     print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
-    print(f'Общее количество всех договоров: {report.invoices_total}')
-    print(f'Общее количество активных договоров: {valid_total}')
-    print(f'Общее количество занятых полок: {report.shelves_total}')
+    print(f'Всех договоров: {report.invoices_total}')
+    print(f'Активных договоров: {valid_total}')
+    print(f'Занятых полок: {report.shelves_total}')
     print(f'Ошибок заполнения: {invalid_total}')
     print(f'Для обработки: {pending_total}\n')
     for note in sorted(report.pending_invoice_notes, key=lambda invoice_note: (invoice_note.date_to, invoice_note.num)):
