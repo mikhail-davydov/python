@@ -2,7 +2,7 @@ from datetime import date
 
 # Common
 WARN_NOTIFICATION_DAYS = 3
-NOTE_FIELDS_COUNT = 3
+NOTE_FIELDS_COUNT = 4
 SPLIT_BY = ','
 DATE_FORMAT = '%d.%m.%Y'
 

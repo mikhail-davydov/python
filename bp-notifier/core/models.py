@@ -1,8 +1,8 @@
-from collections import namedtuple
-
 import datetime
+from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import NamedTuple
 
 
 class AppConfig(BaseSettings):
@@ -60,4 +60,27 @@ class InvoiceItem(BaseModel):
     note: str | None = Field(alias="Note", default=None)
 
 
-InvoiceNoteInfo = namedtuple('InvoiceNoteInfo', ['num', 'name', 'phone', 'date_to', 'error'])
+class InvoiceNoteInfo(NamedTuple):
+    """
+    Модель для поля Примечание в счете (Invoice.note)
+    """
+
+    num: int
+    name: str = None
+    phone: str = None
+    date_to: datetime.date = None
+    shelves: int = 0
+    error: str = None
+
+
+@dataclass
+class Report:
+    """
+    Модель для формирования отчета
+    """
+
+    invoices_total: int
+    shelves_total: int
+    pending_invoice_notes: list[InvoiceNoteInfo]
+    valid_invoice_notes: list[InvoiceNoteInfo]
+    invalid_invoice_notes: list[InvoiceNoteInfo]
