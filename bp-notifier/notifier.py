@@ -93,8 +93,17 @@ def main(config: AppConfig):
         max_workers = MAX_WORKERS or len(invoice_ids)
         invoice_req = DocInvoiceRequest(api_key, db, firm)
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            tasks: list[Future] = [executor.submit(invoice_req.get_item, invoice) for invoice in invoice_ids]
-            invoices = [task.result(TIMEOUT) for task in tasks]
+            tasks: dict[Future, str] = {
+                executor.submit(invoice_req.get_item, invoice): invoice
+                for invoice in invoice_ids
+            }
+
+            invoices = []
+            for task in tasks:
+                try:
+                    invoices.append(task.result(TIMEOUT))
+                except Exception as ex:
+                    logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
 
         all_invoice_notes = list(map(extract_invoice_fields, invoices))
 
