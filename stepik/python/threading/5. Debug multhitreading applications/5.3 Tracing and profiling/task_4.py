@@ -16,12 +16,13 @@ threading.excepthook = custom_exception_handler
 
 class MyThread(threading.Thread):
 
-    def __init__(self, target: Callable = None, result=None, args=None, kwargs=None):
+    def __init__(self, target: Callable = None, result=None, *args, **kwargs):
+        # super().__init__(group=None, target=target, args=args, kwargs=kwargs)
+        super().__init__()
         self._args = args or ()
         self._kwargs = kwargs or {}
         self._target = target
         self._result = result
-        super().__init__(group=None, target=target, args=self._args, kwargs=self._kwargs)
 
     def run(self):
         current_ = threading.current_thread()

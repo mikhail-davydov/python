@@ -40,7 +40,7 @@ class AsCompletedIterator:
         ожидаем завершенную задачу - элемент из очереди готовых задач get()
         и возвращаем его
 
-        :return:
+        :return: готовую задачу из очереди
         """
         if not self._todo_left:
             raise StopAsyncIteration
