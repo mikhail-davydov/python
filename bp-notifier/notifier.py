@@ -62,7 +62,7 @@ def print_invoice_report(report: Report):
 
     print()
     print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
-    print(f'Всех договоров: {report.invoices_total}')
+    print(f'Всего договоров: {report.invoices_total}')
     print(f'Активных договоров: {valid_total}')
     print(f'Занятых полок: {report.shelves_total}')
     print(f'Ошибок заполнения: {invalid_total}')
