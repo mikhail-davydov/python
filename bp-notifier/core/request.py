@@ -33,9 +33,9 @@ class Request:
             params=params,
             headers=headers,
         )
-        while response.status_code != 200:
+        while not response.ok:
             if response.status_code != 429:
-                raise RuntimeError(response.status_code, response.reason)
+                response.raise_for_status()
 
             reset_timestamp = int(response.headers.get('X-RateLimit-Reset') or '0')
             current_time = time.time()

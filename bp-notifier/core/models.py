@@ -4,6 +4,8 @@ from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import NamedTuple
 
+from core.types import Number
+
 
 class AppConfig(BaseSettings):
     api_key: str | None = Field(min_length=64, default=None)
@@ -69,18 +71,18 @@ class InvoiceNoteInfo(NamedTuple):
     name: str = None
     phone: str = None
     date_to: datetime.date = None
-    shelves: int = 0
+    shelves: Number = 0
     error: str = None
 
 
 @dataclass
-class Report:
+class ReportData:
     """
     Модель для формирования отчета
     """
 
     invoices_total: int
-    shelves_total: int
+    shelves_total: Number
     pending_invoice_notes: list[InvoiceNoteInfo]
     valid_invoice_notes: list[InvoiceNoteInfo]
     invalid_invoice_notes: list[InvoiceNoteInfo]
