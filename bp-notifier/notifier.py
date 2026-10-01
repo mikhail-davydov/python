@@ -7,16 +7,16 @@ import time
 from core.constants import (
     DOC_TYPE, MAX_WORKERS, START_DATE, TIMEOUT
 )
+from core.filters import DaysToExpiredFilter
 from core.models import AppConfig, InvoiceNoteInfo, ReportData
-from core.parser import extract_invoice_fields
-from core.predicate import should_include_invoice
+from core.parsers import InvoiceNoteInfoParser
 from core.reports import SimpleOutputReport
 from core.request import ArchiveRequest, DocInvoiceRequest
 
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
-    format='%(asctime)s | %(levelname)s | %(module)s.%(funcName)s.%(lineno)d | %(message)s',
+    format='%(asctime)s | %(levelname)s | %(module)s %(funcName)s:%(lineno)d | %(message)s',
 )
 
 
@@ -47,7 +47,7 @@ def main(config: AppConfig):
                 except Exception as ex:
                     logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
 
-        all_invoice_notes = list(map(extract_invoice_fields, invoices))
+        all_invoice_notes = list(map(InvoiceNoteInfoParser.extract, invoices))
 
         valid_invoice_notes: list[InvoiceNoteInfo] = []
         invalid_invoice_notes: list[InvoiceNoteInfo] = []
@@ -62,7 +62,7 @@ def main(config: AppConfig):
         pending_invoice_notes = [
             invoice_note
             for invoice_note in valid_invoice_notes
-            if should_include_invoice(invoice_note.date_to)
+            if DaysToExpiredFilter.apply(invoice_note.date_to)
         ]
         logging.info(f'{pending_invoice_notes=}')
 
