@@ -22,36 +22,14 @@ logging.basicConfig(
 
 def main(config: AppConfig):
     try:
-        api_key = config.api_key
-        db = config.db
-        firm = config.firm
-
-        archive_req = ArchiveRequest(api_key, db, firm)
-        items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
-        invoice_ids = [item.object for item in items]
-        invoices_total = len(invoice_ids)
+        invoices_total, invoice_ids = get_invoice_ids(config)
         logging.info(f'total: {invoices_total}, items={invoice_ids}')
 
-        max_workers = MAX_WORKERS or len(invoice_ids)
-        invoice_req = DocInvoiceRequest(api_key, db, firm)
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            tasks: dict[Future, str] = {
-                executor.submit(invoice_req.get_item, invoice): invoice
-                for invoice in invoice_ids
-            }
-
-            invoices = []
-            for task in tasks:
-                try:
-                    invoices.append(task.result(TIMEOUT))
-                except Exception as ex:
-                    logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
-
-        all_invoice_notes = list(map(InvoiceNoteInfoParser.extract, invoices))
+        invoice_notes = get_invoice_notes(config, invoice_ids)
 
         valid_invoice_notes: list[InvoiceNoteInfo] = []
         invalid_invoice_notes: list[InvoiceNoteInfo] = []
-        for invoice in all_invoice_notes:
+        for invoice in invoice_notes:
             if invoice.error:
                 invalid_invoice_notes.append(invoice)
             else:
@@ -78,6 +56,32 @@ def main(config: AppConfig):
     except Exception as ex:
         logging.error(f'Exception: {ex}', exc_info=True)
         raise
+
+
+def get_invoice_notes(config: AppConfig, invoice_ids: list[str]) -> list[InvoiceNoteInfo]:
+    max_workers = MAX_WORKERS or len(invoice_ids)
+    invoice_req = DocInvoiceRequest(config.api_key, config.db, config.firm)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        tasks: dict[Future, str] = {
+            executor.submit(invoice_req.get_item, invoice): invoice
+            for invoice in invoice_ids
+        }
+
+        invoices = []
+        for task in tasks:
+            try:
+                invoices.append(task.result(TIMEOUT))
+            except Exception as ex:
+                logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
+    invoice_notes = list(map(InvoiceNoteInfoParser.extract, invoices))
+    return invoice_notes
+
+
+def get_invoice_ids(config: AppConfig) -> tuple[int, list[str]]:
+    archive_req = ArchiveRequest(config.api_key, config.db, config.firm)
+    items = archive_req.get_full_doc_type_archive(DOC_TYPE, START_DATE)
+    invoice_ids = [item.object for item in items]
+    return len(invoice_ids), invoice_ids
 
 
 if __name__ == '__main__':
