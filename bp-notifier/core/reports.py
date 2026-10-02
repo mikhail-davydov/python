@@ -53,7 +53,7 @@ class SimpleOutputReport(Report):
         if rate_total:
             print('Под реализацию:')
             for rate, invoices in sorted(self.report_data.rate_invoice_notes.items()):
-                print(f'Ставка {rate}, договора: {', '.join(map(str, sorted(invoices)))}')
+                print(f'Ставка {rate}, #: {', '.join(map(str, sorted(invoices)))}')
             print()
 
         if invalid_total:

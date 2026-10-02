@@ -27,13 +27,3 @@ class DaysToExpiredFilter(Filter):
             return days_diff <= WARN_NOTIFICATION_DAYS
 
         return True
-
-
-class RatePercentFilter(Filter):
-    """
-    Класс фильтрации InvoiceNoteInfo по значению "под реализацию" (проценты)
-    """
-
-    @staticmethod
-    def apply() -> bool:
-        pass
