@@ -1,11 +1,12 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 
 import logging
+import re
 import sys
 import time
 
 from core.constants import (
-    DOC_TYPE, MAX_WORKERS, START_DATE, TIMEOUT
+    DOC_TYPE, MAX_WORKERS, SPLIT_BY, START_DATE, TIMEOUT
 )
 from core.filters import DaysToExpiredFilter
 from core.models import AppConfig, InvoiceNoteInfo, ReportData
@@ -26,15 +27,7 @@ def main(config: AppConfig):
         logging.info(f'total: {invoices_total}, items={invoice_ids}')
 
         invoice_notes = get_invoice_notes(config, invoice_ids)
-
-        valid_invoice_notes: list[InvoiceNoteInfo] = []
-        invalid_invoice_notes: list[InvoiceNoteInfo] = []
-        for invoice in invoice_notes:
-            if invoice.error:
-                invalid_invoice_notes.append(invoice)
-            else:
-                valid_invoice_notes.append(invoice)
-
+        valid_invoice_notes, invalid_invoice_notes, rate_invoice_notes = split_into_sublists(invoice_notes)
         shelves_total = sum(note.shelves for note in valid_invoice_notes)
 
         pending_invoice_notes = [
@@ -50,6 +43,7 @@ def main(config: AppConfig):
             pending_invoice_notes,
             valid_invoice_notes,
             invalid_invoice_notes,
+            rate_invoice_notes,
         )
 
         SimpleOutputReport(report_data).make()
@@ -58,9 +52,36 @@ def main(config: AppConfig):
         raise
 
 
+def split_into_sublists(invoice_notes: list[InvoiceNoteInfo]):
+    valid_invoice_notes: list[InvoiceNoteInfo] = []
+    invalid_invoice_notes: list[InvoiceNoteInfo] = []
+    rate_invoice_notes: dict = {}
+
+    for invoice in invoice_notes:
+        if error := invoice.error:
+            split_error = tuple(map(str.strip, error.split(SPLIT_BY, 1)))
+            reason, value = split_error[0], split_error[-1]
+            if is_rate_based(reason, value):
+                invoice.error = None
+                invoice.rate = value.strip()
+                rate_invoice_notes.setdefault(value, list())
+                rate_invoice_notes[value].append(invoice.num)
+            else:
+                invalid_invoice_notes.append(invoice)
+        else:
+            valid_invoice_notes.append(invoice)
+
+    return valid_invoice_notes, invalid_invoice_notes, rate_invoice_notes
+
+
+def is_rate_based(reason, value):
+    return reason and value and reason.strip() == 'Некорректный формат' and re.match(r'^\d+%$', value)
+
+
 def get_invoice_notes(config: AppConfig, invoice_ids: list[str]) -> list[InvoiceNoteInfo]:
     max_workers = MAX_WORKERS or len(invoice_ids)
     invoice_req = DocInvoiceRequest(config.api_key, config.db, config.firm)
+
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         tasks: dict[Future, str] = {
             executor.submit(invoice_req.get_item, invoice): invoice
@@ -73,6 +94,7 @@ def get_invoice_notes(config: AppConfig, invoice_ids: list[str]) -> list[Invoice
                 invoices.append(task.result(TIMEOUT))
             except Exception as ex:
                 logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
+
     invoice_notes = list(map(InvoiceNoteInfoParser.extract, invoices))
     return invoice_notes
 

@@ -30,7 +30,7 @@ class InvoiceNoteInfoParser(Parser):
             parts = tuple(map(str.strip, invoice.note.split(SPLIT_BY)))
             if len(parts) < NOTE_FIELDS_COUNT:
                 logging.warning(f'#{invoice.num}: некорректный формат, {invoice.note!r}')
-                return InvoiceNoteInfo(invoice.num, error=f'Некорректный формат, {invoice.note!r}')
+                return InvoiceNoteInfo(invoice.num, error=f'Некорректный формат, {invoice.note}')
 
             name, phone, date_to, shelves = parts[:NOTE_FIELDS_COUNT]
             return InvoiceNoteInfo(

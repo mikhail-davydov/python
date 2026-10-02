@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import NamedTuple
+from typing import Optional
 
 from core.types import Number
 
@@ -62,17 +62,19 @@ class InvoiceItem(BaseModel):
     note: str | None = Field(alias="Note", default=None)
 
 
-class InvoiceNoteInfo(NamedTuple):
+@dataclass
+class InvoiceNoteInfo:
     """
     Модель для поля Примечание в счете (Invoice.note)
     """
 
     num: int
-    name: str = None
-    phone: str = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
     date_to: datetime.date = None
     shelves: Number = 0
-    error: str = None
+    rate: Optional[str] = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -86,3 +88,4 @@ class ReportData:
     pending_invoice_notes: list[InvoiceNoteInfo]
     valid_invoice_notes: list[InvoiceNoteInfo]
     invalid_invoice_notes: list[InvoiceNoteInfo]
+    rate_invoice_notes: dict[str, list[int]]

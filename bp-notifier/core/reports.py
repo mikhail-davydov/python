@@ -30,27 +30,33 @@ class SimpleOutputReport(Report):
         pending_total = len(self.report_data.pending_invoice_notes)
         valid_total = len(self.report_data.valid_invoice_notes)
         invalid_total = len(self.report_data.invalid_invoice_notes)
+        rate_total = sum(map(len, self.report_data.rate_invoice_notes.values()))
 
         print()
         print(f'Отчет за {now.strftime(DATE_FORMAT)}\n')
         print(f'Всего договоров: {self.report_data.invoices_total}')
         print(f'Активных: {valid_total}')
         print(f'Занятых полок: {self.report_data.shelves_total}')
+        print(f'Под реализацию: {rate_total}')
         print(f'Ошибок заполнения: {invalid_total}')
         print(f'Для обработки: {pending_total}\n')
         for note in sorted(self.report_data.pending_invoice_notes,
                            key=lambda invoice_note: (invoice_note.date_to, invoice_note.num),
                            ):
-            num, name, phone, date_to, shelves, _ = note
-            days_diff = (date_to - now).days
-            print(f'{'Договор #':<15s}: {num}')
-            print(f'{'Имя':<15s}: {name}')
-            print(f'{'Контакт':<15s}: {phone}')
-            print(f'{'Действует до':<15s}: {date_to.strftime(DATE_FORMAT)}')
+            days_diff = (note.date_to - now).days
+            print(f'{'Договор #':<15s}: {note.num}')
+            print(f'{'Имя':<15s}: {note.name}')
+            print(f'{'Контакт':<15s}: {note.phone}')
+            print(f'{'Действует до':<15s}: {note.date_to.strftime(DATE_FORMAT)}')
             print(f'{'Осталось дней':<15s}: {days_diff}{' (Просрочено)' if days_diff < 0 else ''}\n')
+
+        if rate_total:
+            print('Под реализацию:')
+            for rate, invoices in sorted(self.report_data.rate_invoice_notes.items()):
+                print(f'Ставка {rate}, договора: {', '.join(map(str, sorted(invoices)))}')
+            print()
 
         if invalid_total:
             print('Ошибки заполнения:')
             for note in sorted(self.report_data.invalid_invoice_notes, key=lambda invoice_note: invoice_note.num):
-                num, *_, error = note
-                print(f'Договор # {num}: {error}')
+                print(f'Договор # {note.num}: {note.error}')
