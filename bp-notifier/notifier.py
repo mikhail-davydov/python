@@ -1,18 +1,19 @@
 from concurrent.futures import Future, ThreadPoolExecutor
 
 import logging
-import re
 import sys
 import time
 
 from core.constants import (
-    DOC_TYPE, MAX_WORKERS, SPLIT_BY, START_DATE, TIMEOUT
+    DOC_TYPE, MAX_WORKERS, RATE_REGEX, SPLIT_BY, START_DATE, TIMEOUT
 )
 from core.filters import DaysToExpiredFilter
 from core.models import AppConfig, InvoiceNoteInfo, ReportData
 from core.parsers import InvoiceNoteInfoParser
 from core.reports import SimpleOutputReport
 from core.request import ArchiveRequest, DocInvoiceRequest
+
+type InvoiceNotesSplitLists = tuple[list[InvoiceNoteInfo], list[InvoiceNoteInfo], dict[str, list[int]]]
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -52,7 +53,7 @@ def main(config: AppConfig):
         raise
 
 
-def split_into_sublists(invoice_notes: list[InvoiceNoteInfo]):
+def split_into_sublists(invoice_notes: list[InvoiceNoteInfo]) -> InvoiceNotesSplitLists:
     valid_invoice_notes: list[InvoiceNoteInfo] = []
     invalid_invoice_notes: list[InvoiceNoteInfo] = []
     rate_invoice_notes: dict = {}
@@ -64,8 +65,7 @@ def split_into_sublists(invoice_notes: list[InvoiceNoteInfo]):
             if is_rate_based(reason, value):
                 invoice.error = None
                 invoice.rate = value.strip()
-                rate_invoice_notes.setdefault(value, list())
-                rate_invoice_notes[value].append(invoice.num)
+                rate_invoice_notes.setdefault(value, []).append(invoice.num)
             else:
                 invalid_invoice_notes.append(invoice)
         else:
@@ -74,8 +74,8 @@ def split_into_sublists(invoice_notes: list[InvoiceNoteInfo]):
     return valid_invoice_notes, invalid_invoice_notes, rate_invoice_notes
 
 
-def is_rate_based(reason, value):
-    return reason and value and reason.strip() == 'Некорректный формат' and re.match(r'^\d+%$', value)
+def is_rate_based(reason, value) -> bool:
+    return reason and value and reason == 'Некорректный формат' and RATE_REGEX.match(value)
 
 
 def get_invoice_notes(config: AppConfig, invoice_ids: list[str]) -> list[InvoiceNoteInfo]:
@@ -95,7 +95,7 @@ def get_invoice_notes(config: AppConfig, invoice_ids: list[str]) -> list[Invoice
             except Exception as ex:
                 logging.error(f'Get data failed for {tasks.get(task)}: {ex!r}', exc_info=True)
 
-    invoice_notes = list(map(InvoiceNoteInfoParser.extract, invoices))
+    invoice_notes = [InvoiceNoteInfoParser.extract(inv) for inv in invoices]
     return invoice_notes
 
 
@@ -108,7 +108,7 @@ def get_invoice_ids(config: AppConfig) -> tuple[int, list[str]]:
 
 if __name__ == '__main__':
     app_config = AppConfig()
-    print(app_config)
+    # logging.info(app_config)
 
     start_time = time.perf_counter()
     main(app_config)
