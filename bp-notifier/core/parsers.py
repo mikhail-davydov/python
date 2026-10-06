@@ -41,5 +41,5 @@ class InvoiceNoteInfoParser(Parser):
                 to_number(shelves),
             )
         except Exception as ex:
-            logging.error(f'Ошибка при извлечении данных из invoice.note: {ex}', exc_info=True)
-            return InvoiceNoteInfo(invoice.num, error=repr(ex))
+            logging.error(f'Ошибка при извлечении данных из invoice.note {invoice.note!r}: {ex}', exc_info=True)
+            return InvoiceNoteInfo(invoice.num, error=f'{invoice.note!r}, {ex!r}')
