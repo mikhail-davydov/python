@@ -55,3 +55,7 @@ _ai/
 *.key
 *.pem
 *.p12
+
+# AI for OpenIDE — local agent state (chat transcripts, memory, snapshots; may contain secrets).
+.aiforopenide/
+!.aiforopenide/config.json
