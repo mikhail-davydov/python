@@ -265,7 +265,7 @@ class Task(BaseModel):
     ]
 
 
-# class User(BaseModel):
+# class User2(BaseModel):
 #     username: Annotated[
 #         str,
 #         Field(
