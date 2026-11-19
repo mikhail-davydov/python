@@ -9,6 +9,6 @@ router = APIRouter(
 @router.get("/")
 async def get_all_notes():
     """
-    Возвращает список всех категорий товаров.
+    Возвращает список всех заметок.
     """
     return "Notes API is working"
