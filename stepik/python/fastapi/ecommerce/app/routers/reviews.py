@@ -39,9 +39,9 @@ async def get_all_reviews(db: AsyncSession = Depends(get_async_db)):
 
 @router.post("/", response_model=ReviewSchema, status_code=status.HTTP_201_CREATED)
 async def create_review(
-    review_data: ReviewCreate,
-    current_user: UserModel = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
+        review_data: ReviewCreate,
+        current_user: UserModel = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_db),
 ):
     """
     Создание нового отзыва о товаре.
@@ -91,9 +91,9 @@ async def create_review(
 
 @router.delete("/{review_id}", response_model=dict)
 async def delete_review(
-    review_id: int,
-    current_user: UserModel = Depends(get_current_user),
-    db: AsyncSession = Depends(get_async_db),
+        review_id: int,
+        current_user: UserModel = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_db),
 ):
     """
     Мягкое удаление отзыва (установка is_active = False).

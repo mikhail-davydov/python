@@ -45,8 +45,8 @@ async def get_products_by_category(category_id: int, db: AsyncSession = Depends(
 
 @router.get("/{product_id}/reviews", response_model=list[ReviewSchema])
 async def get_product_reviews(
-    product_id: int,
-    db: AsyncSession = Depends(get_async_db),
+        product_id: int,
+        db: AsyncSession = Depends(get_async_db),
 ):
     """
     Возвращает список активных отзывов для указанного товара.
