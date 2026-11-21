@@ -10,7 +10,8 @@ from app.db_depends import get_async_db
 from app.models.cart_items import CartItem as CartItemModel
 from app.models.orders import Order as OrderModel, OrderItem as OrderItemModel
 from app.models.users import User as UserModel
-from app.schemas import Order as OrderSchema, OrderList
+from app.payments import create_yookassa_payment
+from app.schemas import Order as OrderSchema, OrderCheckoutResponse, OrderList, OrderStatusResponse
 
 router = APIRouter(
     prefix="/orders",
@@ -29,7 +30,11 @@ async def _load_order_with_items(db: AsyncSession, order_id: int) -> OrderModel 
     return result.first()
 
 
-@router.post("/checkout", response_model=OrderSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/checkout",
+    response_model=OrderCheckoutResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def checkout_order(
         db: AsyncSession = Depends(get_async_db),
         current_user: UserModel = Depends(get_current_user),
@@ -38,13 +43,13 @@ async def checkout_order(
     Создаёт заказ на основе текущей корзины пользователя.
     Сохраняет позиции заказа, вычитает остатки и очищает корзину.
     """
-    cart_result = await db.scalars(
+    cart_result = await db.execute(
         select(CartItemModel)
         .options(selectinload(CartItemModel.product))
         .where(CartItemModel.user_id == current_user.id)
         .order_by(CartItemModel.id)
     )
-    cart_items = cart_result.all()
+    cart_items = cart_result.scalars().all()
     if not cart_items:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty")
 
@@ -53,7 +58,7 @@ async def checkout_order(
 
     for cart_item in cart_items:
         product = cart_item.product
-        if not product.is_active:
+        if not product or not product.is_active:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Product {cart_item.product_id} is unavailable",
@@ -65,6 +70,11 @@ async def checkout_order(
             )
 
         unit_price = product.price
+        if unit_price is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Product {product.name} has no price set",
+            )
         total_price = unit_price * cart_item.quantity
         total_amount += total_price
 
@@ -81,6 +91,30 @@ async def checkout_order(
     order.total_amount = total_amount
     db.add(order)
 
+    try:
+        await db.flush()
+        payment_info = await create_yookassa_payment(
+            order_id=order.id,
+            amount=order.total_amount,
+            user_email=current_user.email,
+            description=f"Оплата заказа #{order.id}",
+        )
+    except RuntimeError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        print(exc)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Не удалось инициировать оплату",
+        ) from exc
+
+    order.payment_id = payment_info.get("id")
+
     await db.execute(delete(CartItemModel).where(CartItemModel.user_id == current_user.id))
     await db.commit()
 
@@ -90,7 +124,10 @@ async def checkout_order(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load created order",
         )
-    return created_order
+    return OrderCheckoutResponse(
+        order=created_order,
+        confirmation_url=payment_info.get("confirmation_url"),
+    )
 
 
 @router.get("/", response_model=OrderList)
@@ -132,3 +169,36 @@ async def get_order(
     if not order or order.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
     return order
+
+
+@router.get("/{order_id}/status", response_model=OrderStatusResponse)
+async def get_order_status(
+        order_id: int,
+        db: AsyncSession = Depends(get_async_db),
+        current_user: UserModel = Depends(get_current_user),
+):
+    """
+    Возвращает статус заказа. Только владелец заказа может запрашивать его статус.
+    """
+    order = await db.scalar(
+        select(OrderModel).where(OrderModel.id == order_id)
+    )
+
+    if not order or order.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    status_messages = {
+        "paid": f"Спасибо! Заказ #{order_id} оплачен. Ожидайте доставку.",
+        "canceled": "Оплата не прошла. Попробуйте ещё раз.",
+        "failed": "Оплата не прошла. Попробуйте ещё раз.",
+        "pending": "Оплата в процессе...",
+    }
+
+    message = status_messages.get(order.status, "Неизвестный статус заказа.")
+
+    return OrderStatusResponse(
+        order_id=order.id,
+        status=order.status,
+        paid_at=order.paid_at,
+        message=message,
+    )

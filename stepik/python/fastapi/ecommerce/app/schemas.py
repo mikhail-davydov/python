@@ -7,6 +7,15 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field, ConfigDict, EmailStr, ValidationError
 
 
+# Payments
+class OrderCheckoutResponse(BaseModel):
+    order: Order = Field(..., description="Созданный заказ")
+    confirmation_url: str | None = Field(
+        None,
+        description="URL для перехода на оплату в YooKassa",
+    )
+
+
 # Order
 class OrderItem(BaseModel):
     id: int = Field(..., description="ID позиции заказа")
@@ -36,6 +45,15 @@ class OrderList(BaseModel):
     total: int = Field(ge=0, description="Общее количество заказов")
     page: int = Field(ge=1, description="Текущая страница")
     page_size: int = Field(ge=1, description="Размер страницы")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderStatusResponse(BaseModel):
+    order_id: int = Field(..., description="ID заказа")
+    status: str = Field(..., description="Текущий статус заказа")
+    paid_at: datetime | None = Field(None, description="Время оплаты или null")
+    message: str = Field(..., description="Сообщение для пользователя")
 
     model_config = ConfigDict(from_attributes=True)
 
