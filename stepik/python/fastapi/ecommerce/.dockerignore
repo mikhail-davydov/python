@@ -1,0 +1,9 @@
+.git
+.gitignore
+.env
+docker-compose*
+
+.aiforopenide
+.gigacode
+.idea
+.venv
